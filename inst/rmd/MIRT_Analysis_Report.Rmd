@@ -41,6 +41,10 @@ knitr::opts_chunk$set(echo=FALSE, warning = FALSE)
 requireNamespace("officer")
 requireNamespace("rmarkdown")
 requireNamespace("officedown")
+if (!require(latticeExtra)) {
+  install.packages("latticeExtra")
+  requireNamespace("latticeExtra")
+}
 fmt_tra_other <- function(ft, reset_width = TRUE){#Convert matrix to table.
   c <- ncol(ft)
   ft <- as.data.frame(ft)%>%flextable::flextable()
@@ -276,7 +280,7 @@ Item parameters serve as crucial indicators for assessing item quality. Provided
 | Very high    | >1.70 | 2.00 |
 | Perfect      | $+\infty$ | $+\infty$ |
 
-In this analysis, the `r model` model was selected. The `r MIRT_est_method` was used for parameter estimation. Generally, the discrimination and difficulty are assessed using $MDISC_i$ and $beta_i$. Therefore, the 'TestAnaAPP' transformed the $alpha_{iq}$ and $d_i$ parameters into $MDISC_i$ and $beta_i$ respectively. In a between-item test, $MDISC_i$ equals the absolute value of $alpha_{iq}$ since each item only has one $alpha_{i.}$. To obtain the $d_i$ parameter in the above formula, users can calculate $d_i$ using $beta_i$ as follows: $d_i = \frac{MDISC_{i}}{-\beta_i}$.
+In this analysis, the `r model` model was selected. The `r MIRT_est_method` was used for parameter estimation. Generally, the discrimination and difficulty are assessed using $MDISC_i$ and $\beta_i$. Therefore, the 'TestAnaAPP' transformed the $\alpha_{iq}$ and $d_i$ parameters into $MDISC_i$ and $\beta_i$ respectively. In a between-item test, $MDISC_i$ equals the absolute value of $\alpha_{iq}$ since each item only has one $\alpha_{i.}$. To obtain the $d_i$ parameter in the above formula, users can calculate $d_i$ using $\beta_i$ as follows: $d_i = \frac{MDISC_{i}}{-\beta_i}$.
 
 The item parameters are as follows:
 
@@ -339,7 +343,10 @@ $$SE = \frac{1}{\sqrt{I(\theta)}}$$
 Since the test is a between-item test, where each item measures only one of several latent traits, it is not feasible to visually represent $\theta$ in multiple dimensions. Therefore, 'TestAnaAPP' is designed to display one dimension of the TIC at a time. Below is the TIC that you have chosen to display in the user interface.
 
 ```{r, echo=FALSE,fig.cap=sprintf("The test information curve and measurement error"), fig.id = "TIC",fig.cap.style = "Image Caption",fig.height=4,fig.width=plot_width}
-plotrix::twoord.plot(lx = sim_theta1_infor1[,1],ly = sim_theta1_infor1[,2],
+if(mode$is.within_item==TRUE){
+  NULL%>%print()
+}else{
+  plotrix::twoord.plot(lx = sim_theta1_infor1[,1],ly = sim_theta1_infor1[,2],
             rx = sim_theta1_infor1[,1],ry = 1/sqrt(sim_theta1_infor1[,2]),
             main = paste0("Test Information and Measurement Error of ",F_name),
             ylab = "Test information",
@@ -353,6 +360,8 @@ plotrix::twoord.plot(lx = sim_theta1_infor1[,1],ly = sim_theta1_infor1[,2],
     text(x = sim_theta1_infor1[which.max(sim_theta1_infor1[,2]),1],
          y = max(sim_theta1_infor1[,2])
          ,labels = paste(round(max(sim_theta1_infor1[,2]),3)))
+}
+
 ```
 
 

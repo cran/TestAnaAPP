@@ -41,6 +41,11 @@ knitr::opts_chunk$set(echo=FALSE, warning = FALSE)
 requireNamespace("officer")
 requireNamespace("rmarkdown")
 requireNamespace("officedown")
+if (!require(latticeExtra)) {
+  install.packages("latticeExtra")
+  requireNamespace("latticeExtra")
+}
+
 fmt_tra_other <- function(ft, reset_width = TRUE){#Convert matrix to table.
   c <- ncol(ft)
   ft <- as.data.frame(ft)%>%flextable::flextable()
