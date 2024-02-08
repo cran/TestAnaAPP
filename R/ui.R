@@ -317,7 +317,7 @@ app_ui <- function() {
                                        br(),
                                        br(),
                                        "Generate data analysis reports based on the relevant settings of each interface
-                                       in unidimensional IRT",br(),
+                                       in unidimensional IRT.",br(),
                                        downloadButton(outputId = "IRT_report",label = "Download analysis report")))
                             )),
                           tabItem(
@@ -539,7 +539,7 @@ app_ui <- function() {
                                                              selected = "No"),
                                                  tags$b("Note: "), "Estimating the covariance matrix can be time-consuming and may encounter
                                                  errors in some cases, depending on the parameter estimation method. However,
-                                                 it is necessary to estimate the covariance in multidimensional models",
+                                                 it is necessary to estimate the covariance in multidimensional models.",
                                                  br(),br(),
 
                                                  submitButton( "Updata results")),
@@ -550,7 +550,7 @@ app_ui <- function() {
                                                  br(),
                                                  br(),
                                                  "Generate data analysis reports based on the relevant settings of each interface
-                                                 in multidimensional IRT",br(),
+                                                 in multidimensional IRT.",br(),
                                                  downloadButton(outputId = "MIRT_report",label = "Download analysis report")
                                              )))
 

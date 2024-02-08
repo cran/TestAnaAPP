@@ -703,6 +703,8 @@ app_server <- function(input, output, session) {
 
   ###8.6 WrightMap------
   IRT_wright_rea <- reactive({
+    if(model_selected(input$modelselect) != "Rasch")
+      return(NULL)
     Response <- mydata()%>%as.data.frame()
     cat_all <- apply(Response, MARGIN = 2, FUN = cat_number)
 
@@ -962,6 +964,10 @@ app_server <- function(input, output, session) {
     rownames(dataset1) <- dataset[,1]
     colnames(dataset1) <- colnames(dataset)[-1]
 
+    if(str_detect(colnames(dataset1),pattern = " ") %>% any()){
+      colnames(dataset1) <- colnames(dataset1) %>% str_replace_all(pattern = " ",replacement = "_")
+    }
+
     data <- as.data.frame(dataset1)
     if(sum(is.na(dataset1)) >=1){
       stop("Data cannot contain missing values!")
@@ -1195,8 +1201,12 @@ app_server <- function(input, output, session) {
   MIRT_person_rea <- reactive({
     MIRT_fit <- MIRT_fit_rea()
     Response <- mydata()
+    dim_data <- dimension() %>% as.data.frame()
+    mode <- dimension_recode(Qmatrix = dim_data )
+
     MIRT_person <- fscores(MIRT_fit, method = est_person_method(input$MIRT_person_est_method),
                            full.scores = T, response.pattern = Response,QMC = TRUE)
+    colnames(MIRT_person) <- c(mode$F_names, paste0("SE_",mode$F_names))
     data.frame("ID" =  paste0(1:nrow(Response)), round( MIRT_person, digits = 3))
   })
   output$MIRT_person <- renderDataTable({
@@ -1225,7 +1235,9 @@ app_server <- function(input, output, session) {
     }
   })
   MIRT_wright_rea <- reactive({
-    dim_data <- dimension()
+    if(model_selected(input$modelselect1) != "Rasch")
+      return(NULL)
+    dim_data <- dimension() %>% as.data.frame()
     mode <- dimension_recode(Qmatrix = dim_data )
     if(mode$is.within_item==TRUE){
       return(NULL)
@@ -1235,7 +1247,7 @@ app_server <- function(input, output, session) {
     if(is.null(input$wright_dim_select)){
       wright_dim <- as.vector(mode$F_names)[1]
     }else{
-      wright_dim <-  input$wright_dim_select
+      wright_dim <-  input$wright_dim_select %>% as.character()
     }
 
     #Item parameters
@@ -1251,6 +1263,7 @@ app_server <- function(input, output, session) {
     }
     #Person parameters
     MIRT_person <- MIRT_person_rea()[,-1]
+
 
     thresholds <- item_par_dim[,c(str_which(colnames(item_par) %>% str_to_lower(),
                                             pattern = "difficult"))]
@@ -1313,26 +1326,22 @@ app_server <- function(input, output, session) {
     MIRT_ICC_rea()
   },height =  exprToFunction(input$MIRT_wrap_height))
   ##9.9 IIC----------------------------------------------------------
-  Item_infor<- function(object,theta,mode,colnames){
-    D <- mode$F_n
+  Item_infor<- function(object,theta,Qmatrix,colnames){
+    D <- ncol(Qmatrix)
     degrees <- rep(0, D)
 
-    TRUE_information <- testinfo(object, Theta = theta[,1:mode$F_n],
+    TRUE_information <- testinfo(object, Theta = theta[,1:D],
                                  degrees = degrees, individual = T)
     colnames(TRUE_information) <- colnames
     dim_inf <- matrix(NA, ncol = D, nrow = nrow(theta));
-    colnames(dim_inf) <- paste0(mode$F_names[1:D],"-information")
+    colnames(dim_inf) <- paste0(colnames(Qmatrix),"-information")
 
     for(i in 1:D){
-      items <- str_split(mode$dim, pattern = "\n")[[1]][i]%>%
-        str_remove_all(pattern = " ")%>%
-        str_remove_all(pattern = mode$F_names[i])%>%
-        str_remove_all(pattern = "=")%>%
-        str_split(pattern = ",")
-      if(length(items[[1]])>1){
-        dim_inf[,i] <- rowSums(TRUE_information[,items[[1]]])
+      items <- which(Qmatrix[,i]==1)
+      if(length(items)>1){
+        dim_inf[,i] <- rowSums(TRUE_information[,items])
       }else{
-        dim_inf[,i] <- TRUE_information[,items[[1]]]
+        dim_inf[,i] <- TRUE_information[,items]
       }
     }
     result <- list(Item_information = TRUE_information,
@@ -1349,7 +1358,7 @@ app_server <- function(input, output, session) {
     item_info1 <- Item_infor(object = MIRT_fit,theta = matrix(rep(sim_theta,mode$F_n),
                                                               ncol = mode$F_n,
                                                               nrow = length(sim_theta)),
-                             mode = mode,colnames = colnames(Response))$Item_information
+                             Qmatrix = dim_data,colnames = colnames(Response))$Item_information
     as.data.frame(item_info1)
   })
   MIRT_IIC_rea <- reactive({
@@ -1413,7 +1422,7 @@ app_server <- function(input, output, session) {
     item_info1 <- Item_infor(object = MIRT_fit,theta = matrix(rep(sim_theta,mode$F_n),
                                                               ncol = mode$F_n,
                                                               nrow = length(sim_theta)),
-                             mode = mode,colnames = colnames(Response))$dim_information
+                             Qmatrix = dim_data,colnames = colnames(Response))$dim_information
     colnames(item_info1) <- c(mode$F_names, paste0(mode$F_names,"infor"))
     sim_theta1_infor1 <- item_info1[,c(input$MIRT_dim_select,paste0(input$MIRT_dim_select,"infor"))]
     test_infor<- plotrix::twoord.plot(lx = sim_theta1_infor1[,1],ly = sim_theta1_infor1[,2],
@@ -1502,10 +1511,10 @@ app_server <- function(input, output, session) {
       dim_data <- dimension() %>% as.data.frame()
       Response <- mydata() %>% as.data.frame()
       mode <- dimension_recode(Qmatrix = dim_data)
-      sim_theta <- MIRT_person_rea()[,as.vector(mode$F_name)]
+      sim_theta <- MIRT_person_rea()[,2:(ncol(dim_data)+1)]
       item_info1 <- Item_infor(object = MIRT_fit,
                                theta = sim_theta,
-                               mode = mode,
+                               Qmatrix = dim_data,
                                colnames = colnames(Response))
       item_info <- item_info1$Item_information
       colnames(item_info ) <- colnames(Response)
@@ -1545,13 +1554,14 @@ app_server <- function(input, output, session) {
     },
     content = function(file){
       #Selections
+
       model <- input$modelselect1
       MIRT_est_method <- input$MIRT_est_method
       MIRT_person_est_method <- input$MIRT_person_est_method
       MIRT_itemfit_method <- input$MIRT_itemfit_method
       #Model fit
       MIRT_fit <- MIRT_fit_rea()
-      dimension <- dimension()
+      dimension <- dimension()  %>% as.data.frame()
       mode <- dimension_recode(Qmatrix = dimension)
       MIRT_modelfit_relat <- MIRT_modelfit_relat_rea()
       MIRT_modelfit <- MIRT_modelfit_rea()
@@ -1575,17 +1585,8 @@ app_server <- function(input, output, session) {
       item_info1 <- Item_infor(object = MIRT_fit,theta = matrix(rep(sim_theta,mode$F_n),
                                                                 ncol = mode$F_n,
                                                                 nrow = length(sim_theta)),
-                               mode = mode,colnames = colnames(Response))$dim_information
+                               Qmatrix = dimension, colnames = colnames(Response))$dim_information
       colnames(item_info1) <- c(mode$F_names, paste0(mode$F_names,"infor"))
-
-      if(is.null(input$MIRT_dim_select)){
-        TIC_dim <- as.vector(mode$F_names)[1]
-      }else{
-        TIC_dim <- input$MIRT_dim_select
-      }
-
-      sim_theta1_infor1 <- item_info1[,c(TIC_dim,paste0(TIC_dim,"infor"))]
-      F_name <- TIC_dim
 
       wright_map_height <- input$MIRT_wright_map_height
       wrap_height_value <- input$MIRT_wrap_height
