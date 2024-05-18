@@ -11,6 +11,8 @@
 #' @importFrom stats cor na.omit quantile sd
 #' @importFrom bruceR EFA Alpha CFA Corr Describe Freq import lavaan_summary
 #' @importFrom tidyr pivot_longer
+#' @importFrom latticeExtra mapplot
+#' @importFrom difR difMH difLogistic difSIBTEST
 
 #' @noRd
 app_server <- function(input, output, session) {
@@ -150,7 +152,12 @@ app_server <- function(input, output, session) {
     inFile <- input$res_data
     dataset <- bruceR::import(inFile$datapath)
     data <- as.data.frame(dataset)
-    if(length(which(is.character(data))) >=1){
+
+    data <- dataset %>% unlist() %>% as.numeric() %>%
+      matrix(ncol = ncol(dataset)) %>% as.data.frame()
+    colnames(data) <- colnames(dataset)
+
+    if(length(which(is.character(data %>% unlist()))) >=1){
       return("Data can not contain any string data.")
     }
     data
@@ -166,17 +173,18 @@ app_server <- function(input, output, session) {
   #Introduction of this platform-----------------------------------
   output$info <- renderText({
     paste(shiny::p(strong('Package: '), "TestAnaAPP"),
-          shiny::p(strong('Dependence: '), "config, ggplot2, mirt, shinydashboard, EstCRM"),
-          shiny::p(strong('Description: '), "This application enables exploratory factor analysis,
-    confirmatory factor analysis, classical measurement theory analysis,
-    unidimensional item response theory, multidimensional item response theory, and continuous item response
-    model analysis, through the 'shiny' interactive interface. It also facilitates the visualization
-    of the results. Users can easily download the analysis results from the
-    interactive interface. Additionally, users can download a concise report
-    about items and test quailty throught the interactive interface."),
-          shiny::p(strong('Anthor: '), "Youxiang Jiang"),
+          shiny::p(strong('Version: '), "1.0.1"),
+          shiny::p(strong('Dependence: '), "config, ggplot2, mirt, shinydashboard, EstCRM, etc."),
+          shiny::p(strong('Description: '), "This application provides exploratory and confirmatory factor analysis,
+                   classical test theory, unidimensional and multidimensional item response theory,
+                   and continuous item response model analysis, through the 'shiny' interactive interface.
+                   In addition,  it offers rich functionalities for visualizing and downloading results.
+                   Users can download figures, tables, and analysis reports via the interactive interface. "),
+          shiny::p(strong('License: '), "GPL-3"),
+          shiny::p(strong('Anthors: '), "Youxiang Jiang, Qing Zeng, and Hongbo Wen."),
           shiny::p(strong('Email: '), tags$a(href="mailto:jiangyouxiang34@163.com", "jiangyouxiang34@163.com")),
-          shiny::p(strong('Contributor: '), "Hongbo Wen"),
+          shiny::p(strong('Github: '), tags$a(href="https://github.com/jiangyouxiang/TestAnaAPP",
+                                              "https://github.com/jiangyouxiang/TestAnaAPP")),
 
 
           br(),br(),br(),
@@ -188,12 +196,14 @@ app_server <- function(input, output, session) {
           shiny::p("2. You need to understand that 'TestAnaAPP' presents various analysis contents in modular forms.
                    When you need to perform a specific analysis using 'TestAnaAPP', you can directly navigate to
                    that interface after uploading the data. "),
-          shiny::p("3. When it involves dimensional information of the test, you need to upload an ELSX file
+          shiny::p("3. When it involves dimensional information of the test, you need to upload an EXCEL file
                    in the interface of uploading dimensional information to illustrate the test structure.
                    Please edit your document following the examples provided in 'TestAnaAPP'. "),
           shiny::p("4. During the operation, please carefully read the textual prompts presented on each interface
-                   to ensure that the program can execute your intentions correctly. ")
-
+                   to ensure that the program can execute your intentions correctly. "),
+          br(),br(),
+          shiny::p(strong("If you have any questions or suggestions, please contact us.")),
+          br(),br()
     )
   })
   #1. Descriptive statistics--------------------------------------------
@@ -211,7 +221,7 @@ app_server <- function(input, output, session) {
                        "Minimum value" = desc$Min,
                        "Maximum value" = desc$Max,
                        "Skewness" = round(desc$Skewness,digits = 3),
-                       "Kurtisis" = round(desc$Kurtosis,  digits = 3))
+                       "Kurtosis" = round(desc$Kurtosis,  digits = 3))
     desc
   })
   output$CTT_summary <- DT::renderDataTable({
@@ -223,6 +233,9 @@ app_server <- function(input, output, session) {
     if(is.null(input$res_data))
       return(NULL)
     Response <- mydata()%>%as.data.frame()
+    if(0==1){
+      ss <- latticeExtra::mapplot()#useless code
+    }
     scores_plot1 <- hist(rowSums(Response), breaks = 100,
                          main = "The distribution for total score", xlab = "Total score", ylab = "Frequency")
     scores_plot1
@@ -755,7 +768,10 @@ app_server <- function(input, output, session) {
               x_lab = "Theta",
               title = "Item Characteristic Curve",
               ncol = ncol,
-              scale = "fixed")
+              scale = "fixed",
+              title_size = input$IRT_ICC_title_size,
+              xy_size = input$IRT_ICC_label_size,
+              Item_label_size = input$IRT_ICC_itemlabel_size)
   })
 
   output$IRT_ICC <-  renderPlot({
@@ -788,7 +804,10 @@ app_server <- function(input, output, session) {
               x_lab = "Theta",
               title = "Item Information Curve",
               ncol = ncol,
-              scale = input$IRTiic_scale %>% stringr::str_to_lower())
+              scale = input$IRTiic_scale %>% stringr::str_to_lower(),
+              title_size = input$IRT_IIC_title_size,
+              xy_size = input$IRT_IIC_label_size,
+              Item_label_size = input$IRT_IIC_itemlabel_size)
   })
   output$IRT_IIC <- renderPlot({
     if(is.null(input$res_data))
@@ -879,20 +898,27 @@ app_server <- function(input, output, session) {
       paste0("IRT_results.xlsx")
     },
     content = function(file){
-      sim_theta <-  IRT_person_rea()[,2]%>%as.numeric()#True theta
+      est_theta <-  IRT_person_rea()[,2]%>%as.numeric()#True theta
       IRT_fit  <- IRT_fit_reactive()
       Response <- mydata()%>%as.data.frame()
-      item_info <- testinfo(x = IRT_fit, Theta = sim_theta, individual = T)
+      item_info <- testinfo(x = IRT_fit, Theta = est_theta, individual = T)
       colnames(item_info) <- colnames(Response)
+
+      sim_theta <- seq(-4,4,0.01)
+      prob <- probtrace(x = IRT_fit, Theta = sim_theta)
+
       datalist <- list("Absolute model fit" = IRT_modelfit_rea(),
                        "Relative model fit" = IRT_modelfit_relat_rea(),
                        "Dependence test" = IRT_Q3_rea(),
                        "Item fit" = IRT_itemfit_rea(),
                        "Item parameters" = IRT_itempar_rea(),
                        "Person parameters" = IRT_person_rea(),
-                       "Item information" = data.frame("theta"  = sim_theta,
+                       "Response probability" = data.frame("Theta" = sim_theta,
+                                                           prob),
+                       "Item information" = data.frame("Estimated theta"  = est_theta,
                                                        item_info),
-                       "Test Information" = data.frame("Test Information" = rowSums(item_info),
+                       "Test Information" = data.frame("Estimated theta"  = est_theta,
+                                                       "Test Information" = rowSums(item_info),
                                                        "Messurement Error" = 1/sqrt(rowSums(item_info)))
       )
       openxlsx::write.xlsx(x = datalist, file = file, rowNames = T)
@@ -932,11 +958,13 @@ app_server <- function(input, output, session) {
       IRT_TIC <- IRT_TIC_rea()
       IRT_IIC <- IRT_IIC_rea()
 
-      wright_map_height <- input$IRT_wright_map_height
-      wrap_height_value <- input$wrap_height
+      wright_map_height <- input$IRTreport_wright_height
+      wrap_height_value <- input$IRTreport_wrap_height
+      wrap_height_value_iic <- input$IRTreport_wrap_height
 
-
-      wrap_height_value_iic <- input$wrap_height_iic
+      # highlight the significant results
+      IRTreport_Q3_highlight <- input$IRTreport_Q3_h
+      IRTreport_alpha_highlight <- input$IRTreport_alpha_h
 
       #Export analysis report
       path_sys <- system.file("rmd", "IRT_Analysis_Report.Rmd", package = "TestAnaAPP")
@@ -949,6 +977,59 @@ app_server <- function(input, output, session) {
 
     }
   )
+
+  # output$IRTreport_html <- renderUI({
+  #   #Selections
+  #   model <- input$modelselect
+  #   IRT_est_method <- input$IRT_est_method
+  #   IRT_person_est_method <- input$IRT_person_est_method
+  #   EFA_method <- input$EFA_method
+  #   rotation_method <- input$rotation_method
+  #   IRT_itemfit_method <- input$IRT_itemfit_method
+  #   #Model fit
+  #   IRT_modelfit_relat <- IRT_modelfit_relat_rea()
+  #   IRT_modelfit <- IRT_modelfit_rea()
+  #   #Hypothesis test
+  #   fit <- EFA_fit()
+  #   CTT_EFA_eigenvalues <- data.frame( rownames(fit$eigenvalues),
+  #                                      as.data.frame(fit$eigenvalues)%>%round(digits = 3))
+  #   IRT_select_independent <- independent_method(input$IRT_select_independent)
+  #   IRT_Q3 <- IRT_Q3_rea()
+  #
+  #   #Item fit
+  #   IRT_itemfit <- IRT_itemfit_rea()
+  #   #Item parameters
+  #   IRT_itempar <- IRT_itempar_rea()
+  #   #Figures
+  #   IRT_wright <- IRT_wright_rea()
+  #   IRT_ICC <- IRT_ICC_rea()
+  #   IRT_TIC <- IRT_TIC_rea()
+  #   IRT_IIC <- IRT_IIC_rea()
+  #
+  #   wright_map_height <- input$IRT_wright_map_height
+  #   wrap_height_value <- input$wrap_height
+  #
+  #
+  #   wrap_height_value_iic <- input$wrap_height_iic
+  #
+  #   #Export analysis report
+  #   path_sys <- system.file("rmd", "IRT_Analysis_Report.Rmd", package = "TestAnaAPP")
+  #   src <- normalizePath(path_sys)
+  #   owd <- setwd(tempdir())
+  #   on.exit(setwd(owd))
+  #   file.copy(src,"IRT_Analysis_Report_html.Rmd", overwrite = TRUE)
+  #
+  #
+  #   includeHTML(render("IRT_Analysis_Report_html.Rmd",
+  #                      output_format = html_document(toc = TRUE,
+  #                                                    toc_depth = 3,
+  #                                                    toc_float = TRUE,
+  #                                                    number_sections = TRUE,
+  #                                                    anchor_sections = TRUE)))
+  #
+  # })
+
+
 
   #9. MIRT Analysis-------------------------------------------
   #Read dimension ifnormation
@@ -1115,8 +1196,7 @@ app_server <- function(input, output, session) {
     MIRT_itemfit_rea()
   })
 
-  ##9.5 Item parameters-----------------------
-
+  ##9.5 Item parameters--------------------------------------------------------------
   diff_trans <- function(item_par, F_n, MDISC){
     if(str_count(colnames(item_par),"d0")%>%sum() >= 1){
       item_par <- item_par[,-which(colnames(item_par)=="d0")]
@@ -1159,15 +1239,29 @@ app_server <- function(input, output, session) {
     MIRT_fit <- MIRT_fit_rea()
     dim_data <- dimension()
     mode <- dimension_recode(Qmatrix = dim_data)
-    item_par_raw <- coef(MIRT_fit, simplify = TRUE)$items
-    item_par <- diff_trans(item_par = item_par_raw,
-                           F_n = mode$F_n, MDISC = MDISC(MIRT_fit))
-    colnames(item_par) <- colnames(item_par)%>%
-      str_replace_all(pattern = "a", replacement = "Discrimination")%>%
-      str_replace_all(pattern = "u", replacement = "one-slip") %>%
-      str_replace_all(pattern = "b",replacement = "Difficult")%>%
-      str_replace_all(pattern = "g", replacement = "Guess")
+    if(model_selected(value = input$modelselect1) == "graded"){
+      item_par <- coef(MIRT_fit, IRTparms = TRUE, simplify = TRUE)$items
 
+      item_par_d <- str_which(colnames(item_par),pattern = "d")
+      item_par <- cbind(item_par[,-item_par_d],
+                        -1*item_par[,item_par_d]/MDISC(MIRT_fit))
+
+      colnames(item_par) <- colnames(item_par)%>%
+        str_replace_all(pattern = "a", replacement = "Discrimination")%>%
+        str_replace_all(pattern = "u", replacement = "one-slip") %>%
+        str_replace_all(pattern = "d",replacement = "Difficult")%>%
+        str_replace_all(pattern = "g", replacement = "Guess")
+
+    }else{
+      item_par_raw <- coef(MIRT_fit, simplify = TRUE)$items
+      item_par <- diff_trans(item_par = item_par_raw,
+                             F_n = mode$F_n, MDISC = MDISC(MIRT_fit))
+      colnames(item_par) <- colnames(item_par)%>%
+        str_replace_all(pattern = "a", replacement = "Discrimination")%>%
+        str_replace_all(pattern = "u", replacement = "one-slip") %>%
+        str_replace_all(pattern = "b",replacement = "Difficult")%>%
+        str_replace_all(pattern = "g", replacement = "Guess")
+    }
     as.data.frame(item_par) %>% round(digits = 3)
   })
   output$MIRT_itempar <- DT::renderDataTable({
@@ -1314,7 +1408,10 @@ app_server <- function(input, output, session) {
               x_lab = "Theta",
               title = "Item Characteristic Curve",
               ncol = ncol,
-              scale = "fixed")
+              scale = "fixed",
+              title_size = input$MIRT_ICC_title_size,
+              xy_size = input$MIRT_ICC_label_size,
+              Item_label_size = input$MIRT_ICC_itemlabel_size)
 
   })
 
@@ -1379,7 +1476,10 @@ app_server <- function(input, output, session) {
               x_lab = "Theta",
               title = "Item Information Curve",
               ncol = ncol,
-              scale = input$MIRTiic_scale %>% stringr::str_to_lower())
+              scale = input$MIRTiic_scale %>% stringr::str_to_lower(),
+              title_size = input$MIRT_IIC_title_size,
+              xy_size = input$MIRT_IIC_label_size,
+              Item_label_size = input$MIRT_IIC_itemlabel_size)
   })
   output$MIRT_IIC <- renderPlot({
     if(is.null(input$dimensionfile))
@@ -1511,15 +1611,27 @@ app_server <- function(input, output, session) {
       dim_data <- dimension() %>% as.data.frame()
       Response <- mydata() %>% as.data.frame()
       mode <- dimension_recode(Qmatrix = dim_data)
-      sim_theta <- MIRT_person_rea()[,2:(ncol(dim_data)+1)]
+      est_theta <- MIRT_person_rea()[,2:(ncol(dim_data)+1)]
       item_info1 <- Item_infor(object = MIRT_fit,
-                               theta = sim_theta,
+                               theta = est_theta,
                                Qmatrix = dim_data,
                                colnames = colnames(Response))
       item_info <- item_info1$Item_information
       colnames(item_info ) <- colnames(Response)
       dim_infor <- item_info1$dim_information
       colnames(dim_infor) <- c(mode$F_names, paste0(mode$F_names, "_Information"))
+
+      sim_theta <- seq(-4,4,0.01)
+      prob <- probtrace(x = MIRT_fit, Theta = matrix(rep(sim_theta,mode$F_n),
+                                                     nrow = length(sim_theta),
+                                                     ncol = mode$F_n))
+      #information value for plot IIC
+      sim_theta_infor <- Item_infor(object = MIRT_fit,
+                                    theta = matrix(rep(sim_theta,mode$F_n),
+                                                   nrow = length(sim_theta),
+                                                   ncol = mode$F_n),
+                                    Qmatrix = dim_data,
+                                    colnames = colnames(Response))
 
 
 
@@ -1531,8 +1643,13 @@ app_server <- function(input, output, session) {
                          "Item fit" = MIRT_itemfit_rea(),
                          "Item parameters" = MIRT_itempar_rea(),
                          "Person parameters" = MIRT_person_rea(),
+                         "Response probability" = data.frame("Simulated theta" = sim_theta,
+                                                             prob),
                          "Item information" = item_info,
-                         "Test information" = dim_infor)
+                         "Test information" = dim_infor,
+                         "Item information for plot" = data.frame("Simulated theta" = sim_theta,
+                                                                 sim_theta_infor$Item_information),
+                         "Test information for plot" = sim_theta_infor$dim_information)
       }else{
         datalist <- list("Score data" = Response,
                          "Dimension" = dim_data ,
@@ -1541,6 +1658,8 @@ app_server <- function(input, output, session) {
                          "Item fit" = MIRT_itemfit_rea(),
                          "Item parameters" = MIRT_itempar_rea(),
                          "Person parameters" = MIRT_person_rea(),
+                         "Response probability" = data.frame("Simulated theta" = sim_theta,
+                                                             prob),
                          "Item information" = item_info)
       }
       openxlsx::write.xlsx(x = datalist, file = file, rowNames = T)
@@ -1588,9 +1707,14 @@ app_server <- function(input, output, session) {
                                Qmatrix = dimension, colnames = colnames(Response))$dim_information
       colnames(item_info1) <- c(mode$F_names, paste0(mode$F_names,"infor"))
 
-      wright_map_height <- input$MIRT_wright_map_height
-      wrap_height_value <- input$MIRT_wrap_height
-      wrap_height_value_iic <- input$MIRT_wrap_height_iic
+      wright_map_height <- input$MIRTreport_wright_height
+      wrap_height_value <- input$MIRTreport_wrap_height
+      wrap_height_value_iic <- input$MIRTreport_wrap_height
+
+      #highlight some values
+      MIRTreport_Q3_highlight <- input$MIRTreport_Q3_h
+      MIRTreport_alpha_highlight <- input$MIRTreport_alpha_h
+
       #Export analysis report
       path_sys <- system.file("rmd", "MIRT_Analysis_Report.Rmd", package = "TestAnaAPP")
       src <- normalizePath(path_sys)
@@ -1618,13 +1742,17 @@ app_server <- function(input, output, session) {
     dataset <- bruceR::import(inFile$datapath)[,-1] %>% unlist() %>% as.numeric() %>% matrix(ncol = 2)
     data <- as.data.frame(dataset)
     Response <- mydata() %>% as.data.frame()
-    if(max(data) < max(Response) | min(data) > min(Response))
+    if(max(as.numeric(data %>% unlist())) < max(as.numeric(Response %>% unlist())) |
+       min(as.numeric(data %>% unlist())) > min(as.numeric(Response %>% unlist())))
       stop("The range of uploaded data is smaller than the range of score data.")
 
     colnames(data) <- c("max.item", "min.item")
     rownames(data) <- bruceR::import(inFile$datapath)[,1]
 
-    data
+    data <- data.frame(
+      "max.item" = data$max.item %>% as.numeric(),
+      "min.item" = data$min.item %>% as.numeric()
+    )
   })
 
   output$max_min_real <- DT::renderDataTable({
@@ -1768,8 +1896,92 @@ app_server <- function(input, output, session) {
     }
   )
 
+  ## 11. DIF---------------------------------------------------------------------------------------
+  DIF_file <- reactive({
+    if(is.null(input$DIF_group_file))
+      return(NULL)
+    bruceR::import(input$DIF_group_file$datapath) %>% as.data.frame()
+  })
 
+  output$DIF_group_variable <- DT::renderDataTable({
+    DIF_file() %>% DT_dataTable_Show()
+  })
 
+  output$DIF_variable_selection <- renderUI({
+    dif_var <- DIF_file() %>% as.data.frame() %>% colnames()
+    selectInput(inputId = "DIF_variable",label = "Please select a variable to be analyzed.",
+                choices = dif_var, selected = dif_var[1], selectize = TRUE)
+  })
+  output$focal_name <- renderUI({
+
+    choices <- DIF_file()
+    choices <- choices[,input$DIF_variable] %>% table() %>% names()
+
+    selectInput(inputId = "focal_name1",label = "Please select the focal group.",
+                choices = choices , selected = choices[1], selectize = TRUE)
+  })
+
+  DIF_ana_rea <- reactive({
+    if(is.null(input$DIF_group_file))
+      return(NULL)
+    if(is.null(input$res_data))
+      return(NULL)
+    if(is.null(input$focal_name1))
+      return(NULL)
+    Response <- mydata() %>% as.data.frame()
+    DIF_var <- DIF_file()
+    DIF_var <- DIF_var[,sprintf("%s",input$DIF_variable)] %>% as.character()
+    alpha <- as.numeric(input$sig_level)
+
+    if(input$DIF_method == "Mantel Haenszel"){
+      fit <- difMH(Data = Response, group = DIF_var, alpha = alpha,
+                   focal.name = input$focal_name1)
+      result <- data.frame(
+        Chi_square = fit$MH,
+        P.value = fit$p.value
+      )
+
+    }
+    if(input$DIF_method == "Logistic Regression"){
+      fit <- difLogistic(Data=Response, group = DIF_var, alpha = alpha,
+                         focal.name = input$focal_name1)
+      result <- data.frame(
+        LR_stats = fit$Logistik,
+        P.value = fit$p.value,
+        delta_R2 = fit$deltaR2
+      )
+    }
+    if(input$DIF_method == "SIBTEST"){
+      fit <-difSIBTEST(Data=Response, group = DIF_var, alpha = alpha,
+                       focal.name = input$focal_name1)
+      result <- data.frame(
+        Beta = fit$Beta,
+        SE = fit$SE,
+        Chi_square = fit$X2,
+        P.value = fit$p.value
+      )
+    }
+    result <- cbind(round(result, digits = 3) , "DIF" = ifelse(result$P.value < alpha, "Yes", "No"))
+    rownames(result) <- colnames(Response)
+    return(result)
+  })
+
+  output$DIF_results <- DT::renderDataTable({
+    if(is.null(input$DIF_group_file))
+      return(NULL)
+    if(is.null(input$res_data))
+      return(NULL)
+    DIF_ana_rea() %>% DT_dataTable_Show()
+
+  })
+  output$DIF_download <- downloadHandler(
+    filename = function(){
+      paste0("DIF_results.xlsx")
+    },
+    content = function(file){
+      DIF_ana_rea() %>% openxlsx::write.xlsx(file = file, rowNames = T)
+    }
+  )
 }
 
 #Functions-----------------------------------------------------
@@ -1850,32 +2062,38 @@ plot_wrap <- function(theta,
                       x_lab = NULL,
                       title = NULL,   #The main for wrap.
                       ncol = 5,
-                      scale = "fixed"){
-  #Item <- colnames(main_vector)
+                      scale = "fixed",
+                      title_size = 15,
+                      xy_size = 12,
+                      Item_label_size = 10){
+  y <- NULL
+  score <- NULL
+  Item <- NULL
+  Score <- NULL
 
   #A single curve
   if(lines == "IIC"){
     colnames(y_matrix) <- main_vector
-    plot_data <- bind_cols("theta" = theta, y_matrix)%>%
-      pivot_longer(cols = -1, names_to = "Item", values_to = "y")
-
-    plot_data <- data.frame(plot_data,
-                            "Item" = factor(plot_data$Item, levels = main_vector))
-
+    plot_data <- bind_cols("theta" = theta, y_matrix) %>%
+      pivot_longer(cols = -1, names_to = "Item", values_to = "y") %>%
+      mutate("Item" = factor(Item, levels = main_vector))
+    colnames(plot_data) <- c("theta","Item","y")
 
     #plot
-    gra <- ggplot(plot_data, mapping = aes(x = plot_data$theta,
-                                           y = plot_data$y))+
-      geom_line(linewidth =1.2)+
+    gra <- ggplot(plot_data, mapping = aes(x = theta, y = y))+
+      geom_line(linewidth =1.05)+
       labs(x =  x_lab ,y = y_lab, title =  title)+
-      theme(plot.title = element_text(hjust = 0.5,size = 8),
-            axis.title = element_text(size = 7))+
+      theme_classic()+
+      theme(plot.title = element_text(hjust = 0.5,size = title_size),
+            axis.title = element_text(size = xy_size),
+            strip.background = element_blank(),
+            strip.text = element_text(size = Item_label_size))+
       facet_wrap(facets = ~Item, ncol = ncol, scales = scale)
   }else if(lines == "ICC"){
 
     di_items <- which(grade_vector == 1)
-    varname <- colnames(y_matrix)%>%str_split(pattern = ".P.",simplify = T)
-    varname <- varname[,1]%>%unique()
+    varname <- colnames(y_matrix)%>%str_split(pattern = "\\.P\\.",simplify = T)
+    varname <- varname[,1] %>% unique()
     if(sum(varname != main_vector) >= 1){
       colnames_y_matrix <- vector(mode = "character")
       low_grade <- ifelse(test = is.include.zore, yes = 0, no = 1)
@@ -1889,36 +2107,39 @@ plot_wrap <- function(theta,
         }
         for (j in low_grade:max_grade) {
           colnames_y_matrix <- c(colnames_y_matrix, paste0(main_vector[i],
-                                                           ".P.",j))
+                                                           "\\.P\\.",j))
         }
       }
       colnames(y_matrix) <- colnames_y_matrix
     }
     plot_data1 <- bind_cols("theta" = theta, y_matrix) %>%
       pivot_longer(cols = -1, names_to = c("Item","score"),values_to = "y",
-                   names_sep = ".P.") %>% as.data.frame()
-    plot_data1 <-
-      data.frame("score" = factor(str_sub(plot_data1$score,start = 1,end = 1),
-                                  levels = 0:max(plot_data1$score)),
-                 "Item" = factor(plot_data1$Item, levels = main_vector),
-                 "theta" = plot_data1$theta,
-                 "y" = plot_data1$y)
+                   names_sep = "\\.P\\.") %>%
+      mutate(
+        "Score" = factor(str_sub(score,start = 1,end = 1),
+                         levels = 0:max(score)),
+        "Item" = factor(Item, levels = main_vector)
+      )
+    colnames(plot_data1) <- c("theta","Item","Score","y")
 
     if(is.include.zore == F){
-      plot_data <- plot_data1[which(plot_data1$score != 0), ]
+      plot_data <- plot_data1[which(plot_data1$Score != 0), ]
     }else{
       plot_data <- plot_data1
     }
 
-    gra <-  ggplot( plot_data, mapping = aes(x = plot_data$theta,
-                                             y = plot_data$y,
-                                             colour = plot_data$score,
-                                             linetype = plot_data$score))+
+    gra <-  ggplot( plot_data, mapping = aes(x = theta,
+                                             y = y,
+                                             colour = Score,
+                                             linetype = Score))+
       geom_line(linewidth = 1.05)+
       labs(x = x_lab, y = y_lab, title = title)+
-      theme(legend.position = "top",
-            plot.title = element_text(hjust = 0.5,size = 8),
-            axis.title = element_text(size = 7))+
+      theme_classic()+
+      theme(legend.position = "right",
+            plot.title = element_text(hjust = 0.5,size = title_size),
+            axis.title = element_text(size = xy_size),
+            strip.background = element_blank(),
+            strip.text = element_text(size = Item_label_size))+
       facet_wrap(facets = ~Item, ncol = ncol, scales = scale)
   }
 

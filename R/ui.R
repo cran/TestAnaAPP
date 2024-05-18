@@ -9,8 +9,9 @@
 
 
 app_ui <- function() {
+  options(shiny.legacy.datatable = TRUE)
   dashboardPage(skin = "blue",
-                dashboardHeader(title = "TEST ANALYSIS APPLICATION",titleWidth = 700),#The name of this platform
+                dashboardHeader(title = "Test Analysis Application",titleWidth = 700),#The name of this platform
                       #Pages----------------------------------------------------------------------------------
                       dashboardSidebar(
                         sidebarMenu(id="sidebarmenu",
@@ -39,7 +40,8 @@ app_ui <- function() {
                                                menuSubItem("WrightMap",tabName = "IRTwright",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Item Characteristic Curve",tabName = "IRTicc",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Item Information Curve",tabName = "IRTiic",icon = shiny::icon("angle-double-right")),
-                                               menuSubItem("Test Information Curve",tabName = "IRTtic",icon = shiny::icon("angle-double-right"))),
+                                               menuSubItem("Test Information Curve",tabName = "IRTtic",icon = shiny::icon("angle-double-right")),
+                                               menuSubItem("Analysis Report",tabName = "IRTreport_tab",icon = shiny::icon("angle-double-right"))),
 
                                      menuItem("Multidimensional IRT",tabName = "MIRT",icon = icon("cogs"),
                                                menuSubItem("Upload Dimension *",tabName = "MIRTdim_info",icon = icon("table")),
@@ -51,13 +53,17 @@ app_ui <- function() {
                                                menuSubItem("Wright Map",tabName = "MIRTwright",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Item Characteristic Curve",tabName = "MIRTicc",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Item Information Curve",tabName = "MIRTiic",icon = shiny::icon("angle-double-right")),
-                                               menuSubItem("Test Information Curve",tabName = "MIRTtic",icon = shiny::icon("angle-double-right"))),
+                                               menuSubItem("Test Information Curve",tabName = "MIRTtic",icon = shiny::icon("angle-double-right")),
+                                               menuSubItem("Analysis Report",tabName = "MIRTreport_tab",icon = shiny::icon("angle-double-right"))),
                                      menuItem("Continuous Response Model", tabName = "CRM_model", icon = icon("cogs"),
                                                menuSubItem("Upload extreme data",tabName = "CRM_maxmin_print",icon = icon("table")),
                                                menuSubItem("Item Fit",tabName = "CRM_itemfit",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Item Parameters",tabName = "CRM_itempara",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Person Parameter",tabName = "CRM_personpar",icon = shiny::icon("angle-double-right")),
-                                               menuSubItem("Item Category Response Curves",tabName = "CRM_ICC",icon =  shiny::icon("angle-double-right")))
+                                               menuSubItem("Item Category Response Curves",tabName = "CRM_ICC",icon =  shiny::icon("angle-double-right"))),
+                                     menuItem("Differential Item Function",tabName = "DIF",icon = icon("cogs"),
+                                               menuSubItem("Upload Group Information",tabName = "DIF_group",icon = icon("table")),
+                                               menuSubItem("DIF Analysis",tabName = "DIF_analysis",icon = shiny::icon("angle-double-right")))
                         )),
                       dashboardBody(
                         #A. Introduction page---------------------------------------------------------------------------
@@ -103,7 +109,7 @@ app_ui <- function() {
                             ),
                             column(4,
                                    box(title = "Method",status = "warning", solidHeader = TRUE,width = 12,
-                                       selectInput(inputId = "EFA_method",label = "Parameter estimation methods",selectize = TRUE,
+                                       selectInput(inputId = "EFA_method",label = "Extraction method",selectize = TRUE,
                                                    choices = list("Principal Component Analysis",
                                                                   "Principal Axis Factor Analysis",
                                                                   "Maximum Likelihood Factor Analysis",
@@ -122,7 +128,7 @@ app_ui <- function() {
                                                                   "Quartimax",
                                                                   "Equamax"),
                                                    selected = "Varimax"),
-                                       submitButton( "Updata results")),
+                                       submitButton( "Update results")),
                                    box(title = "Download results", status = "success",solidHeader = TRUE,
                                        downloadButton(outputId = "EFA_result", label = "Download"),
                                        width = 12)))
@@ -181,7 +187,7 @@ app_ui <- function() {
                                                 sliderInput(inputId = "CFA_plot_height",label = "Adjust height",
                                                             min = 300,max = 1800,step = 30,value = 800),
                                                 br(),
-                                                submitButton( "Updata plot"),
+                                                submitButton( "Update plot"),
                                                 br(),
                                                 downloadButton("CFA_plot_file",label = "Download"))))
                           ),
@@ -310,15 +316,7 @@ app_ui <- function() {
                                        standard EM algorithm.",
                                        br(),br(),
 
-                                       submitButton( "Updata results")),
-                                   box(title = "Download results",solidHeader = TRUE,status = "success",width = 12,
-                                       "Download all the analysis results for unidimensional IRT in the 'TestAnaAPP'.",br(),
-                                       downloadButton(outputId = "IRT_resultfile", label = "Download results"),
-                                       br(),
-                                       br(),
-                                       "Generate data analysis reports based on the relevant settings of each interface
-                                       in unidimensional IRT.",br(),
-                                       downloadButton(outputId = "IRT_report",label = "Download analysis report")))
+                                       submitButton( "Update results")))
                             )),
                           tabItem(
                             tabName = "IRTassum_test",
@@ -334,7 +332,7 @@ app_ui <- function() {
                                                              choices = list("LD-X2 (Chen & Thissen, 1997)",
                                                                             "Q3 (Yen, 1984)"),
                                                              selected = "Q3 (Yen, 1984)",selectize = TRUE),
-                                                 submitButton("Updata results"))))
+                                                 submitButton("Update results"))))
                           ),
                           tabItem(
                             tabName = "IRTitemfit",
@@ -352,12 +350,16 @@ app_ui <- function() {
                                                                             "G2 statistic (McKinley & Mills, 1985)"),
                                                              selected = "chi-squared test (Kang & Chen, 2007)",
                                                              selectize = TRUE),
-                                                 submitButton( "Updata results"))))
+                                                 submitButton( "Update results"))))
                           ),
                           tabItem(
                             tabName = "IRTitempar",
                             fluidPage(column(8,
-                                             box(title="Item parameters",DT::dataTableOutput("IRT_itempar")%>%
+                                             box(title="Item parameters",
+                                                 tags$b("Note: "),"For detailed formulas for the model and interpretations of parameters,
+                                                 please download the analysis report from the Analysis Report section.",
+                                                 br(),
+                                                 DT::dataTableOutput("IRT_itempar")%>%
                                                    box_show_theme(),
                                                  solidHeader = TRUE,
                                                  status = "info",width = 12)))
@@ -381,7 +383,7 @@ app_ui <- function() {
                                                                             "maximum likelihood (ML)",
                                                                             "weighted likelihood estimation (WLE)"),
                                                              selected = "expected a-posteriori (EAP)",selectize = TRUE),
-                                                 submitButton( "Updata plot"))))
+                                                 submitButton( "Update plot"))))
                           ),
                           tabItem(
                             tabName = "IRTwright",
@@ -393,7 +395,7 @@ app_ui <- function() {
                                                    box_show_theme(),
                                                  width = 12)),
                                       column(4,
-                                             box(title = "Adjust plot",width = 12,solidHeader = TRUE,
+                                             box(title = "Customize Drawing",width = 12,solidHeader = TRUE,
                                                  status = "warning",
                                                  sliderInput(inputId = "IRT_wright_map_height",label = "The height of WrightMap.",
                                                              min = 300,max = 1800,step = 30,value = 400),
@@ -408,7 +410,7 @@ app_ui <- function() {
                                                  br(),
                                                  sliderInput(inputId = "IRT_wright_p_width",label = "The width of right plot.",
                                                              min = 1, max = 5, value = 1.618, step = 0.25),
-                                                 submitButton( "Updata plot")),
+                                                 submitButton( "Update plot")),
                                              box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
                                                  downloadButton(outputId = "IRT_wrightfile", label = "Download"))))
                           ),
@@ -420,16 +422,28 @@ app_ui <- function() {
                                                    box_show_theme(),
                                                  width = 12)),
                                       column(4,
-                                             box(title = "Adjust the figures (ICC and IIC)",width = 12,solidHeader = TRUE,
+                                             box(title = "Customize Drawing (ICC)",width = 12,solidHeader = TRUE,
                                                  status = "warning",
                                                  sliderInput(inputId = "wrap_height", label = "Select height",
                                                              min = 300, max = 1800,value = 400,step = 30),
+                                                 br(),
+                                                 sliderInput(inputId = "IRT_ICC_title_size",
+                                                             label = "Select title size",
+                                                             min = 10, max = 30,value = 20,step = 1),
+                                                 br(),
+                                                 sliderInput(inputId = "IRT_ICC_label_size",
+                                                             label = "Select label size",
+                                                             min = 10, max = 30,value = 15,step = 1),
+                                                 br(),
+                                                 sliderInput(inputId = "IRT_ICC_itemlabel_size",
+                                                             label = "Select item label size",
+                                                             min = 10, max = 30,value = 15,step = 1),
                                                  br(),
                                                  selectInput(inputId = "wrap_ncol",
                                                              label = "Select column number",
                                                              choices = list("2","3","4","5","6","7"),
                                                              selected = "4"),
-                                                 submitButton( "Updata results")),
+                                                 submitButton( "Update results")),
                                              box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
                                                  downloadButton(outputId = "IRT_ICCfile", label = "Download"))))
                           ),
@@ -441,19 +455,32 @@ app_ui <- function() {
                                                    box_show_theme(),
                                                  width = 12)),
                                       column(4,
-                                             box(title = "Adjust plot", solidHeader = TRUE,status = "warning",width = 12,
+                                             box(title = "Customize Drawing (IIC)", solidHeader = TRUE,status = "warning",width = 12,
                                                  selectInput(inputId = "IRTiic_scale",label = "Free or fixed y axis",
                                                              choices = list("Free","Fixed"),selected = "Free"),
                                                  br(),
                                                  sliderInput(inputId = "wrap_height_iic", label = "Select height",
                                                              min = 300, max = 1800,value = 400,step = 30),
                                                  br(),
+                                                 sliderInput(inputId = "IRT_IIC_title_size",
+                                                             label = "Select title size",
+                                                             min = 10, max = 30,value = 20,step = 1),
+                                                 br(),
+                                                 sliderInput(inputId = "IRT_IIC_label_size",
+                                                             label = "Select label size",
+                                                             min = 10, max = 30,value = 15,step = 1),
+                                                 br(),
+                                                 sliderInput(inputId = "IRT_IIC_itemlabel_size",
+                                                             label = "Select item label size",
+                                                             min = 10, max = 30,value = 15,step = 1),
+
+                                                 br(),
                                                  selectInput(inputId = "wrap_ncol_iic",
                                                              label = "Select column number",
                                                              choices = list("2","3","4","5","6","7"),
                                                              selected = "4"),
 
-                                                 submitButton( "Updata results")),
+                                                 submitButton( "Update results")),
                                              box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
                                                  downloadButton(outputId = "IRT_IICfile", label = "Download"))))
                           ),
@@ -467,6 +494,39 @@ app_ui <- function() {
                                     column(4,
                                            box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
                                                downloadButton(outputId = "IRT_TICfile", label = "Download"))))
+                          ),
+                          tabItem(tabName = "IRTreport_tab",
+                                  fluidRow(
+
+                                    column(8,
+                                           box(title = "Download results",solidHeader = TRUE,status = "success",width = 12,
+                                               "Download all the analysis results of unidimensional IRT in the 'TestAnaAPP'.",br(),
+                                               br(),
+                                               downloadButton(outputId = "IRT_resultfile", label = "Download results"),
+                                               br(),
+                                               br()),
+                                           box(title = "Generate data analysis reports",solidHeader = TRUE,status = "success",width = 12,
+                                               "TestAnaAPP will generate a data analysis report based on the following settings:",
+                                               br(),
+                                               br(),
+                                               sliderInput(inputId = "IRTreport_Q3_h",label = "Highlight the values where the absolute value of the
+                                                           local dependency indicator is greater than?",
+                                                           min = 0, max = 1,value = 0.22,step = 0.01),
+                                               br(),
+                                               sliderInput(inputId = "IRTreport_alpha_h", label = "Highlight the values where the discrimination
+                                                           is lower than?", min = 0, max = 2,value = 0.5,step = 0.1),
+                                               br(),
+                                               sliderInput(inputId = "IRTreport_wrap_height", label = "Select the height (inch) of the facet plot
+                                                           (item characteristic curve and item information curve)",
+                                                           min = 3, max = 30,value = 10,step = 0.2),
+                                               tags$b("Note: "),"the column number of the facet plot can be set in the above specific section.",
+                                               br(),br(),
+                                               sliderInput(inputId = "IRTreport_wright_height", label = "Select the height (inch) of the wright map",
+                                                           min = 3, max = 10,value = 5,step = 0.2),
+                                               br(),
+                                               submitButton("Update Settings"),
+                                               br(),
+                                               downloadButton(outputId = "IRT_report",label = "Download analysis report"))))
                           ),
                           #G. MIRT page---------------------------------------------------------------------------------
                           tabItem(
@@ -542,17 +602,7 @@ app_ui <- function() {
                                                  it is necessary to estimate the covariance in multidimensional models.",
                                                  br(),br(),
 
-                                                 submitButton( "Updata results")),
-
-                                             box(title = "Download results",solidHeader = TRUE,status = "success",width = 12,
-                                                 "Download all the analysis results for multidimensional IRT in the 'TestAnaAPP'.",br(),
-                                                 downloadButton(outputId = "MIRT_resultfile", label = "Download"),
-                                                 br(),
-                                                 br(),
-                                                 "Generate data analysis reports based on the relevant settings of each interface
-                                                 in multidimensional IRT.",br(),
-                                                 downloadButton(outputId = "MIRT_report",label = "Download analysis report")
-                                             )))
+                                                 submitButton( "Update results"))))
 
                           ),
                           tabItem(
@@ -570,7 +620,7 @@ app_ui <- function() {
                                                              choices = list("LD-X2 (Chen & Thissen, 1997)",
                                                                             "Q3 (Yen, 1984)"),
                                                              selected = "Q3 (Yen, 1984)",selectize = TRUE),
-                                                 submitButton("Updata results"))))
+                                                 submitButton("Update results"))))
                           ),
                           tabItem(
                             tabName = "MIRTitemfit",
@@ -586,12 +636,16 @@ app_ui <- function() {
                                                              choices = list("chi-squared test (Kang & Chen, 2007)"),
                                                              selected = "chi-squared test (Kang & Chen, 2007)",
                                                              selectize = TRUE),
-                                                 submitButton( "Updata results"))))
+                                                 submitButton( "Update results"))))
                           ),
                           tabItem(
                             tabName = "MIRTitempar",
                             fluidPage(column(8,
-                                             box(title="Item parameters",DT::dataTableOutput("MIRT_itempar")%>%
+                                             box(title="Item parameters",
+                                                 tags$b("Note: "),"For detailed formulas for the model and interpretations of parameters,
+                                                 please download the analysis report from the Analysis Report section.",
+                                                 br(),
+                                                 DT::dataTableOutput("MIRT_itempar")%>%
                                                    box_show_theme(),
                                                  solidHeader = TRUE,
                                                  status = "info",width = 12),
@@ -619,7 +673,7 @@ app_ui <- function() {
                                                                             "maximum likelihood (ML)",
                                                                             "weighted likelihood estimation (WLE)"),
                                                              selected = "expected a-posteriori (EAP)",selectize = TRUE),
-                                                 submitButton( "Updata plot"))))
+                                                 submitButton( "Update plot"))))
                           ),
                           tabItem(
                             tabName = "MIRTwright",
@@ -631,7 +685,7 @@ app_ui <- function() {
                                                  uiOutput("MIRT_wright1")%>%
                                                    box_show_theme() )),
                                       column(4,
-                                             box(title = "Adjust plot",width = 12,solidHeader = TRUE,
+                                             box(title = "Customize Drawing",width = 12,solidHeader = TRUE,
                                                  status = "warning",
                                                  sliderInput(inputId = "MIRT_wright_map_height",label = "The height of WrightMap.",
                                                              min = 300,max = 1800,step = 30,value = 400),
@@ -647,7 +701,7 @@ app_ui <- function() {
                                                  sliderInput(inputId = "MIRT_wright_p_width",label = "The width of right plot.",
                                                              min = 1, max = 5, value = 1.618, step = 0.25),
                                                  uiOutput("MIRT_wright_dim_select"),
-                                                 submitButton( "Updata plot")),
+                                                 submitButton( "Update plot")),
                                              box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
                                                  downloadButton(outputId = "MIRT_wrightfile", label = "Download"))))
                           ),
@@ -662,16 +716,28 @@ app_ui <- function() {
                                                  width = 12)),
                                       column(4,
 
-                                             box(title = "Adjust the figures (ICC and IIC)",width = 12,solidHeader = TRUE,
+                                             box(title = "Customize Drawing (ICC)",width = 12,solidHeader = TRUE,
                                                  status = "warning",
                                                  sliderInput(inputId = "MIRT_wrap_height", label = "Select height",
                                                              min = 300,max = 1800,step = 30,value = 400),
+                                                 br(),
+                                                 sliderInput(inputId = "MIRT_ICC_title_size",
+                                                             label = "Select title size",
+                                                             min = 10,max = 30,step = 1,value = 20),
+                                                 br(),
+                                                 sliderInput(inputId = "MIRT_ICC_label_size",
+                                                             label = "Select label size",
+                                                             min = 10,max = 30,step = 1,value = 15),
+                                                 br(),
+                                                 sliderInput(inputId = "MIRT_ICC_itemlabel_size",
+                                                             label = "Select item label size",
+                                                             min = 10,max = 30,step = 1,value = 15),
                                                  br(),
                                                  selectInput(inputId = "MIRT_wrap_ncol",
                                                              label = "Select column number",
                                                              choices = list("2","3","4","5","6","7"),
                                                              selected = "4"),
-                                                 submitButton( "Updata results")),
+                                                 submitButton( "Update results")),
                                              box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
                                                  downloadButton(outputId = "MIRT_ICCfile", label = "Download"))))
                           ),
@@ -685,19 +751,31 @@ app_ui <- function() {
                                                    box_show_theme(),
                                                  width = 12)),
                                       column(4,
-                                             box(title = "Adjust plot", solidHeader = TRUE,status = "warning",width = 12,
+                                             box(title = "Customize Drawing (IIC)", solidHeader = TRUE,status = "warning",width = 12,
                                                  selectInput(inputId = "MIRTiic_scale",label = "Free or fixed y axis",
                                                              choices = list("Free","Fixed"),selected = "Free"),
                                                  br(),
                                                  sliderInput(inputId = "MIRT_wrap_height_iic", label = "Select height",
                                                              min = 300,max = 1800,step = 30,value = 400),
                                                  br(),
+                                                 sliderInput(inputId = "MIRT_IIC_title_size",
+                                                             label = "Select title size",
+                                                             min = 10,max = 30,step = 1,value = 20),
+                                                 br(),
+                                                 sliderInput(inputId = "MIRT_IIC_label_size",
+                                                             label = "Select label size",
+                                                             min = 10,max = 30,step = 1,value = 20),
+                                                 br(),
+                                                 sliderInput(inputId = "MIRT_IIC_itemlabel_size",
+                                                             label = "Select item label size",
+                                                             min = 10,max = 30,step = 1,value = 15),
+                                                 br(),
                                                  selectInput(inputId = "MIRT_wrap_ncol_iic",
                                                              label = "Select column number",
                                                              choices = list("2","3","4","5","6","7"),
                                                              selected = "4"),
 
-                                                 submitButton( "Updata results")),
+                                                 submitButton( "Update results")),
                                              box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
                                                  downloadButton(outputId = "MIRT_IICfile", label = "Download"))))
                           ),
@@ -713,8 +791,42 @@ app_ui <- function() {
                                              box(title = "Selection of dimension",width = 12,solidHeader = TRUE,
                                                  status = "warning",
                                                  uiOutput("MIRT_TIC_dim_select"),
-                                                 submitButton( "Updata plot"))
+                                                 submitButton( "Update plot"))
                                       ))
+                          ),
+                          tabItem(
+                            tabName = "MIRTreport_tab",
+                            fluidPage(column(8,
+                                             box(title = "Download results",solidHeader = TRUE,status = "success",width = 12,
+                                                 "Download all the analysis results of multidimensional IRT in the 'TestAnaAPP'.",br(),
+                                                 br(),
+                                                 downloadButton(outputId = "MIRT_resultfile", label = "Download results"),
+                                                 br(),
+                                                 br()),
+                                             box(title = "Generate data analysis reports",solidHeader = TRUE,status = "success",width = 12,
+                                                 "TestAnaAPP will generate a data analysis report based on the following settings:",
+                                                 br(),
+                                                 br(),
+                                                 sliderInput(inputId = "MIRTreport_Q3_h",label = "Highlight the values where the absolute value of the
+                                                           local dependency indicator is greater than?",
+                                                             min = 0, max = 1,value = 0.22,step = 0.01),
+                                                 br(),
+                                                 sliderInput(inputId = "MIRTreport_alpha_h", label = "Highlight the values where the discrimination
+                                                           is lower than?", min = 0, max = 2,value = 0.5,step = 0.1),
+                                                 br(),
+                                                 sliderInput(inputId = "MIRTreport_wrap_height", label = "Select the height (inch) of the facet plot
+                                                             (item characteristic curve and item information curve)",
+                                                             min = 3, max = 30,value = 11,step = 0.2),
+                                                 tags$b("Note: "),"the column number of the facet plot can be set in the above specific section.",
+                                                 br(),br(),
+                                                 sliderInput(inputId = "MIRTreport_wright_height", label = "Select the height (inch) of the wright map",
+                                                             min = 3, max = 10,value = 5,step = 0.2),
+                                                 br(),
+                                                 submitButton("Update Settings"),
+                                                 br(),
+                                                 downloadButton(outputId = "MIRT_report",label = "Download analysis report"))))
+
+
                           ),
                           #H Continuous response model--------------------------------------------------------------
                           tabItem(
@@ -792,7 +904,7 @@ app_ui <- function() {
                                                  "Ferrando, P.J.(2002). Theoretical and Empirical Comparison between Two Models for
                                                  Continuous Item Responses. Multivariate Behavioral Research, 37(4), 521-542.",
                                                  br(),br(),
-                                                 submitButton( "Updata results")),
+                                                 submitButton( "Update results")),
                                              box(title = "Download results",solidHeader = TRUE,status = "success",width = 12,
                                                  "Download all the analysis results for continuous response model in the 'TestAnaAPP'.",br(),
                                                  downloadButton(outputId = "CRM_results",label = "Download"))))
@@ -827,8 +939,60 @@ app_ui <- function() {
                                                        status = "warning",
                                                        uiOutput(outputId = "CRM_item_selection"),
 
-                                                       submitButton( "Updata plot")))),
-                                  )
+                                                       submitButton( "Update plot"))))),
+                          # I. DIF-----------------------------------------------------------------------------------------
+                          tabItem(tabName = "DIF_group",
+                                  fluidPage(column(8,
+                                            box(title = "Group variables of the subjects",solidHeader = TRUE, status = "warning",width = 12,
+                                                "The following data is the group variables of the subjects you uploaded to be analyzed for DIF analysis.",
+                                                br(),br(),
+                                                DT::dataTableOutput(outputId = "DIF_group_variable")%>%
+                                                  box_show_theme())),
+                                            column(4,
+                                                   box(title = "Upload group variables",solidHeader = TRUE, status = "warning",width = 12,
+                                                       "Please upload the group variables of the subjects you want to analyze for DIF.",
+                                                       br(),br(),
+                                                       fileInput(inputId = "DIF_group_file",
+                                                                 "Please upload this data according to the example on the right.",
+                                                                 placeholder="File",buttonLabel = "Browse",
+                                                                 accept = c("xlsx","xls","csv","txt")))))
+                                  ),
+                          tabItem(tabName = "DIF_analysis",
+                                  fluidPage(column(8,
+                                                   box(title = "Analysis results of DIF",solidHeader = TRUE, status = "info",width = 12,
+                                                       DT::dataTableOutput( "DIF_results")%>%
+                                                         box_show_theme())),
+                                            column(4,
+                                                   box(title = "Settings for DIF",solidHeader = TRUE, status = "warning",width = 12,
+                                                       "TestAnaAPP provides several methods for DIF analysis. You can choose the method
+                                                       you want to use.",
+                                                       br(),br(),
+                                                       selectInput(inputId = "DIF_method",
+                                                                   label = "Select the method for DIF analysis",
+                                                                   choices = c("Mantel Haenszel","Logistic Regression","SIBTEST"),
+                                                                   selected = "Mantel Haenszel"),
+                                                       br(),br(),
+                                                       selectInput(inputId = "sig_level",
+                                                                   label = "Significance level",
+                                                                   choices = c("0.01","0.05","0.1"),
+                                                                   selected = "0.05"),
+                                                       br(),br(),
+                                                       "In addition, you can choose a variable (uploaded in the previous step) to analyze DIF.",
+                                                       br(),br(),
+                                                       uiOutput(outputId = "DIF_variable_selection"),
+                                                       br(),br(),
+                                                       submitButton( "Confirm"),
+                                                       br(),
+                                                       uiOutput(outputId = "focal_name"),
+                                                       br(),br(),
+                                                       submitButton( "Update results")),
+                                                   box(title = "Download results",solidHeader = TRUE,status = "success",width = 12,
+                                                       "Download all the analysis results for DIF in the 'TestAnaAPP'.",br(),
+                                                       downloadButton(outputId = "DIF_download",label = "Download")))))
+
+
+
+
 
                         )))
 
