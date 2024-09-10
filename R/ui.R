@@ -6,8 +6,6 @@
 #' @noRd
 #'
 #'
-
-
 app_ui <- function() {
   options(shiny.legacy.datatable = TRUE)
   dashboardPage(skin = "blue",
@@ -16,7 +14,6 @@ app_ui <- function() {
                       dashboardSidebar(
                         sidebarMenu(id="sidebarmenu",
                                      menuItem("TestAnaAPP",tabName = "info",icon = icon("info-circle")),#Introduction
-                                     menuItem("Upload Response *",tabName = "uploaddata",icon = icon("table")),
                                      menuItem("Exploratory Factor Analysis",tabName = "EFA",icon = icon("list-alt"),
                                                menuSubItem("Factor Loading",tabName = "loading",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Scree Plot",tabName = "screen_plot",icon = shiny::icon("angle-double-right"))),
@@ -44,7 +41,7 @@ app_ui <- function() {
                                                menuSubItem("Analysis Report",tabName = "IRTreport_tab",icon = shiny::icon("angle-double-right"))),
 
                                      menuItem("Multidimensional IRT",tabName = "MIRT",icon = icon("cogs"),
-                                               menuSubItem("Upload Dimension *",tabName = "MIRTdim_info",icon = icon("table")),
+                                               menuSubItem("Upload Response Scores ",tabName = "MIRTdim_info",icon = icon("table")),
                                                menuSubItem("Model Fit *",tabName = "MIRTmodelfit",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Hypothesis testing",tabName = "MIRTassum_test",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Item Fit",tabName = "MIRTitemfit",icon = shiny::icon("angle-double-right")),
@@ -56,13 +53,13 @@ app_ui <- function() {
                                                menuSubItem("Test Information Curve",tabName = "MIRTtic",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Analysis Report",tabName = "MIRTreport_tab",icon = shiny::icon("angle-double-right"))),
                                      menuItem("Continuous Response Model", tabName = "CRM_model", icon = icon("cogs"),
-                                               menuSubItem("Upload extreme data",tabName = "CRM_maxmin_print",icon = icon("table")),
+                                               menuSubItem("Upload Response Scores ",tabName = "CRM_maxmin_print",icon = icon("table")),
                                                menuSubItem("Item Fit",tabName = "CRM_itemfit",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Item Parameters",tabName = "CRM_itempara",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Person Parameter",tabName = "CRM_personpar",icon = shiny::icon("angle-double-right")),
                                                menuSubItem("Item Category Response Curves",tabName = "CRM_ICC",icon =  shiny::icon("angle-double-right"))),
                                      menuItem("Differential Item Function",tabName = "DIF",icon = icon("cogs"),
-                                               menuSubItem("Upload Group Information",tabName = "DIF_group",icon = icon("table")),
+                                               menuSubItem("Upload Response Scores ",tabName = "DIF_group",icon = icon("table")),
                                                menuSubItem("DIF Analysis",tabName = "DIF_analysis",icon = shiny::icon("angle-double-right")))
                         )),
                       dashboardBody(
@@ -71,43 +68,41 @@ app_ui <- function() {
                           tabItem(tabName = "info",
                                   fluidRow(
                                     box(title = "Welcome!", solidHeader = TRUE, status = "info",
-                                        htmlOutput("info"),width = 12)
+                                        htmlOutput("info"),width = 12,height = "auto"
+                                        )
                                   )),
-                          #B. Upload response data---------------------------------------------------------------------------
+
+                          #B. EFA page-----------------------------------------------------------------------
                           tabItem(
-                            tabName = "uploaddata",
+                            tabName = "loading",
                             fluidRow(column(8,
                                             box(title="Score Data", solidHeader = TRUE, status = "warning",width = 12,
                                                 br(),
                                                 tags$b("Note: "), "If necessary, please convert the scoring direction of the
                                                 reverse-scored items before data analysis, and then upload them to this platform.",
                                                 br(),br(),br(),
-                                                DT::dataTableOutput("Response")%>%
-                                                  box_show_theme()
-                                                ),
-                            ),
-                            column(4,
-                                   box(title = "Upload File", status = "warning", solidHeader = TRUE,
-                                       fileInput("res_data", "Kindly submit the test data file that requires analysis.
-                                                 Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
-                                                 Ensure that the file solely consists of score data, and refrain from
-                                                 using purely numerical column names.",
-                                                 placeholder="File",buttonLabel = "Browse",
-                                                 accept = c("xlsx","xls","csv","sav","txt")
-                                       ),width = 16))
-                            )),
-                          #C. EFA page-----------------------------------------------------------------------
-                          tabItem(
-                            tabName = "loading",
-                            fluidRow(column(8,
+                                                DT::dataTableOutput("EFA_Response")%>%
+                                                  box_show_theme()),
+                                            box(title = "Bartlett Test", DT::dataTableOutput("EFA_bartlett")%>%
+                                                  box_show_theme(),
+                                                solidHeader = TRUE, status = "info",width = 12),
+
                                             box(title="Eigenvalues", DT::dataTableOutput("CTT_EFA_eigenvalues")%>%
                                                   box_show_theme(),
                                                 solidHeader = TRUE, status = "info",width = 12),
-                                            box(title="Factor Loadings", DT::dataTableOutput("EFA_load")%>%
+                                            box(title="Factor Loadings (Rotated)", DT::dataTableOutput("EFA_load")%>%
                                                   box_show_theme(),
                                                 solidHeader = TRUE, status = "info",width = 12)
                             ),
                             column(4,
+                                   box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
+                                       fileInput("EFA_res", "Kindly submit the test data file that requires analysis.
+                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Ensure that the file solely consists of score data, and refrain from
+                                                              using purely numerical column names.",
+                                                 placeholder="File",buttonLabel = "Browse",
+                                                 accept = c("xlsx","xls","csv","sav","txt")
+                                       ),width = 12),
                                    box(title = "Method",status = "warning", solidHeader = TRUE,width = 12,
                                        selectInput(inputId = "EFA_method",label = "Extraction method",selectize = TRUE,
                                                    choices = list("Principal Component Analysis",
@@ -129,7 +124,7 @@ app_ui <- function() {
                                                                   "Equamax"),
                                                    selected = "Varimax"),
                                        submitButton( "Update results")),
-                                   box(title = "Download results", status = "success",solidHeader = TRUE,
+                                   box(title = "Download Results", status = "success",solidHeader = TRUE,
                                        downloadButton(outputId = "EFA_result", label = "Download"),
                                        width = 12)))
                           ),
@@ -141,19 +136,30 @@ app_ui <- function() {
 
                                                 solidHeader = TRUE, status = "info",width = 12)),
                                      column(4,
-                                            box(title = "Download figure",status = "success",solidHeader = TRUE, width = 12,
+                                            box(title = "Download Figure",status = "success",solidHeader = TRUE, width = 12,
                                                 downloadButton(outputId = "EFA_plotfile", label = "Download"))))
                           ),
-                          #D. CFA page-------------------------------------------------------------
+                          #C. CFA page-------------------------------------------------------------
                           tabItem(
                             tabName = "loading_CFA",
                             fluidRow(column(8,
+                                            box(title="Score Data", solidHeader = TRUE, status = "warning",width = 12,
+                                                br(),
+                                                tags$b("Note: "), "If necessary, please convert the scoring direction of the
+                                                reverse-scored items before data analysis, and then upload them to this platform.",
+                                                br(),br(),br(),
+                                                DT::dataTableOutput("CFA_Response")%>%
+                                                  box_show_theme()),
                                             box(title = "Test Structure",status =  "warning",
                                                 solidHeader = TRUE, width = 12,
-                                                tags$b("Note: "),"In the current version, it does not support a test where a single
-                                                item measures multiple dimensions.",
+                                                tags$b("Note: "),"Edit the dimension information of the quiz according
+                                                to the template file and upload it.",
+                                                downloadButton(outputId = "CFA_dim_example",label = "Download template"),
                                                 br(),br(),
-                                                dataTableOutput("CFA_dimension_example")%>%
+                                                fileInput(inputId = "dimensionfile_cfa",label = "Test structure information.",
+                                                          placeholder="File",buttonLabel = "Browse",
+                                                          accept = c("xlsx","xls","csv")),
+                                                DT::dataTableOutput("CFA_dimension")%>%
                                                   box_show_theme()),
                                             box(title = "Model Fit index",status =  "info",
                                                 solidHeader = TRUE, width = 12,
@@ -164,15 +170,35 @@ app_ui <- function() {
                                                 DT::dataTableOutput("CFA_loading")%>%
                                                   box_show_theme())),
                                      column(4,
-                                            box(title = "Upload Dimension",solidHeader = TRUE,status = "warning",width = 12,
-                                                fileInput(inputId = "dimensionfile_cfa",
-                                                          "Kindly upload an Excel file containing example data on the left side to
-                                                          demonstrate the relationship between each question and dimension.
-                                                          Please note that 'TestAnaAPP' currently does not support
-                                                          the analysis of data where a single item measures multiple dimensions simultaneously.",
+                                            box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
+                                                fileInput("CFA_res", "Kindly submit the test data file that requires analysis.
+                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Ensure that the file solely consists of score data, and refrain from
+                                                              using purely numerical column names.",
                                                           placeholder="File",buttonLabel = "Browse",
-                                                          accept = c("xlsx","xls","csv"))),
-                                            box(title = "Download results",status = "success",solidHeader = TRUE, width = 12,
+                                                          accept = c("xlsx","xls","csv","sav","txt")
+                                                ),width = 12),
+                                            box(title="Basic Settings",
+                                                solidHeader = TRUE,status = "warning",width = 12,
+                                                selectInput(inputId = "CFA_estimator",label = "Estimator selection",
+                                                            selectize = T,
+                                                            choices = list("Maximum Likelihood",
+                                                                           "Generalized Least Squares",
+                                                                           "Weighted Least Squares",
+                                                                           "Unweighted Least Squares",
+                                                                           "Diagonally Weighted Least Squares",
+                                                                           "Distributionally-weighted Least Squares"),
+                                                            selected = "Maximum Likelihood"),
+
+                                                br(),br(),
+
+                                                textInput(inputId = "CFA_HO",label = "Higher-order factor name",
+                                                          placeholder = "If there is no higher-order factor, please leave it blank."),
+
+                                                br(),br(),
+
+                                                submitButton( "Update results")),
+                                            box(title = "Download Results",status = "success",solidHeader = TRUE, width = 12,
                                                 downloadButton(outputId = "CFA_file", label = "Download")))
                             )
                           ),
@@ -182,20 +208,42 @@ app_ui <- function() {
                             fluidRow(column(12,
                                             box(title = "Path Diagram",status =  "info",
                                                 solidHeader = TRUE, width = 12,
+                                                br(),br(),
                                                 uiOutput("CFA_fit_plot1")%>%
                                                   box_show_theme(),
+                                                br(),br(),
+                                                selectInput(inputId = "CFA_plot_par", label = "What should the edge
+                                                            labels indicate in the path diagram? ",
+                                                            selectize = T, choices = list("Parameter estimate",
+                                                                                          "Standardized parameter estimate"),
+                                                            selected = "Standardized parameter estimate"),
+                                                br(),br(),
+
+                                                selectInput(inputId = "CFA_plot_style", label = "Select the layout style of the path diagram",
+                                                            selectize = T, choices = list("tree",
+                                                                                          "circle"),
+                                                            selected = "tree"),
+                                                br(),br(),
                                                 sliderInput(inputId = "CFA_plot_height",label = "Adjust height",
-                                                            min = 300,max = 1800,step = 30,value = 800),
+                                                            min = 300,max = 2000,step = 10,value = 800),
                                                 br(),
-                                                submitButton( "Update plot"),
-                                                br(),
-                                                downloadButton("CFA_plot_file",label = "Download"))))
+                                                sliderInput(inputId = "CFA_plot_width",label = "Adjust width",
+                                                            min = 300,max = 3000,step = 10,value = 1200),
+                                                submitButton( "Update plot"))))
                           ),
 
-                          #E. CTT page-----------------------------------------------------------------------------
+                          #D. CTT page-----------------------------------------------------------------------------
                           tabItem(
                             tabName = "summary",
                             fluidRow(column(8,
+                                            box(title="Score Data", solidHeader = TRUE, status = "warning",width = 12,
+                                                br(),
+                                                tags$b("Note: "), "If necessary, please convert the scoring direction of the
+                                                reverse-scored items before data analysis, and then upload them to this platform.",
+                                                tags$b("Please do not upload total score data for quizzes or dimensions."),
+                                                br(),br(),br(),
+                                                DT::dataTableOutput("CTT_Response")%>%
+                                                  box_show_theme()),
                                             box(title="Descriptive Statistics", DT::dataTableOutput("CTT_summary")%>%
                                                   box_show_theme(),
                                                 solidHeader = TRUE, status = "info",width = 12),
@@ -204,48 +252,61 @@ app_ui <- function() {
                                                 downloadButton(outputId = "scores_plotfile", label = "Download"),#下载
                                                 solidHeader = TRUE, status = "info",width = 12)),
                                      column(4,
-                                            box(title = "Download results",status = "success",solidHeader = TRUE,  width = 12,
+                                            box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
+                                                fileInput("CTT_res", "Kindly submit the test data file that requires analysis.
+                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Ensure that the file solely consists of score data, and refrain from
+                                                              using purely numerical column names.",
+                                                          placeholder="File",buttonLabel = "Browse",
+                                                          accept = c("xlsx","xls","csv","sav","txt")
+                                                ),br(),
+                                                htmlOutput("item_type"),
+                                                ,width = 12),
+                                            box(title = "Download Results",status = "success",solidHeader = TRUE,  width = 12,
                                                 downloadButton(outputId = "summary_result", label = "Download")))
                             )),
                           tabItem(
                             tabName = "CTT_par",
                             fluidRow(column(8,
                                             box(title = "Note", solidHeader = TRUE,status = "warning",width = 12,
-                                                "1. For binary scoring items (items with only two type of scores), 'TestAnaAPP'
-                                                categorizes the participants into a high-score group and a low-score group based on their
-                                                total scores being above or equal to the 73rd percentile and below or equal to the 27th percentile,
-                                                respectively. Then the pass rate of each item in the high-score and low-score groups is calculated,
-                                                and the average pass rate of each item is taken as its difficulty level.",
-                                                br(),
-                                                "2. For multiple scoring items (items with more than two type of scores), 'TestAnaAPP' calculates the
-                                                difficulty of each item by dividing the average score on the item by the maximum score possible on the item.",
-                                                br(),
-                                                "Regardless of the number of scoring categories for an item, 'TestAnaAPP' calculates the difference between
-                                                the mean scores of the high-score and low-score groups on the item and divides it by the maximum possible
-                                                score on the item to obtain the item discrimination index.",
-                                                br(),
-                                                "3. Coefficient of variation is obtained by multiplying the ratio of standard deviation to
-                                                mean on the item by 100%.",
-                                                br(),
-                                                "4. The correlation coefficient is the Pearson correlation coefficient between item scores and
-                                                the total score.",
-                                                br(),
-                                                "5. If the score data includes missing values, 'TestAnaAPP' will delete any case that inludes missing data.",
-                                                br(),
+                                                h4(strong("Dichotomous Scoring Items")),
+                                                shiny::p("Items with only two types of scores."),
+                                                shiny::p(strong("Difficulty:"), "Calculated as the average pass rate of the item, with participants
+                                                  categorized into a high-score group (total scores above or equal to the 73rd percentile) and
+                                                  a low-score group (total scores below or equal to the 27th percentile)."),
+                                                shiny::p(strong("Discrimination:"), "The difference between the mean scores of the high-score and
+                                                         low-score groups on the item, divided by the maximum possible score."),
+                                                p(strong("Correlation with Total Score:"), "Calculated using the point-biserial correlation, which measures
+                                                  the relationship between the binary item score and the total test score."),
+
+                                                h4(strong("Polytomous Scoring Items")),
+                                                shiny::p( "Items with more than two types of scores."),
+                                                shiny::p(strong("Difficulty:"), "Calculated by dividing the average score on the item by the
+                                                  maximum score possible on the item."),
+                                                shiny::p(strong("Discrimination:"), "The difference between the mean scores of the high-score
+                                                  and low-score groups on the item, divided by the maximum possible score."),
+                                                shiny::p(strong("Correlation with Total Score:"), "Calculated using the Pearson correlation coefficient,
+                                                  which measures the linear relationship between the item score and the total test score."),
+
+                                                h4(strong("Coefficient of Variation")),
+                                                shiny::p("Obtained by multiplying the ratio of the standard deviation to the mean on the item by 100%."),
+
+                                                h4(strong("Missing Data Handling Reminder")),
+                                                shiny::p("Cases with missing data will be deleted.")
 
                                                 ),
                                             box(title="Item parameters", DT::dataTableOutput("CTT_itempar")%>%
                                                   box_show_theme(),
                                                 solidHeader = TRUE, status = "info",width = 12)),
                                      column(4,
-                                            box(title = "Download results", status = "success",solidHeader = TRUE,
+                                            box(title = "Download Results", status = "success",solidHeader = TRUE,
                                                 downloadButton(outputId = "CTT_result", label = "Download"),
                                                 width = 12)))
                           ),
                           tabItem(
                             tabName = "CTT_relia",
                             fluidPage(column(8,
-                                             box(title = "Test reliability",
+                                             box(title = "Test Reliability",
                                                  DT::dataTableOutput("CTT_reliability")%>%
                                                    box_show_theme(),solidHeader = TRUE,
                                                  status = "info",width = 12),
@@ -254,14 +315,14 @@ app_ui <- function() {
                                                    box_show_theme(),solidHeader = TRUE,
                                                  status = "info",width = 12)),
                                       column(4,
-                                             box(title = "Download reliability",status = "success",
+                                             box(title = "Download Reliability",status = "success",
                                                  solidHeader = TRUE, width = 12,
                                                  downloadButton(outputId = "CTT_relia_file",label = "Download"))))
                           ),
                           tabItem(
                             tabName = "relate_eff",
                             fluidPage(column(8,
-                                             box(title = "Pearson coefficient matrix",
+                                             box(title = "Pearson Coefficient Matrix",
                                                  DT::dataTableOutput("CTT_relate_eff")%>%
                                                    box_show_theme(),solidHeader = TRUE,
                                                  status = "info",width = 12),
@@ -270,17 +331,26 @@ app_ui <- function() {
                                                    box_show_theme(),solidHeader = TRUE,
                                                  status = "info",width = 12)),
                                       column(4,
-                                             box(title = "Download matrix",status = "success",
+                                             box(title = "Download Matrix",status = "success",
                                                  solidHeader = TRUE, width = 12,
                                                  downloadButton(outputId = "CTT_relatefile",label = "Dowload"))))
                           ),
-                          #F. IRT page----------------------------------------------------------------------------------
+                          #E. IRT page----------------------------------------------------------------------------------
                           tabItem(
                             tabName = "IRTmodelfit",
                             fluidRow(column(8,
+                                            box(title="Score Data", solidHeader = TRUE, status = "warning",width = 12,
+                                                br(),
+                                                tags$b("Note: "), "If necessary, please convert the scoring direction of the
+                                                reverse-scored items before data analysis, and then upload them to this platform.",
+                                                tags$b("Please do not upload total score data for quizzes or dimensions."),
+                                                br(),br(),br(),
+                                                DT::dataTableOutput("IRT_Response")%>%
+                                                  box_show_theme(),
+                                                htmlOutput("IRT_data_type")),
                                             box(title = "Relative fit indices",solidHeader = TRUE,
                                                 status = "info",width = 12,
-                                                dataTableOutput("IRT_modelfit_relat")%>%
+                                                DT::dataTableOutput("IRT_modelfit_relat")%>%
                                                   box_show_theme()),
                                             box(title="Absolute fit indices",DT::dataTableOutput("IRT_modelfit")%>%
                                                   box_show_theme(),
@@ -288,9 +358,16 @@ app_ui <- function() {
                                                 status = "info",width = 12),
                             ),
                             column(4,
-                                   box(title="Basic settings",
+                                   box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
+                                       fileInput("IRT_res", "Kindly submit the test data file that requires analysis.
+                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Ensure that the file solely consists of score data, and refrain from
+                                                              using purely numerical column names.",
+                                                 placeholder="File",buttonLabel = "Browse",
+                                                 accept = c("xlsx","xls","csv","sav","txt")
+                                       ),width = 12),
+                                   box(title="Basic Settings",
                                        solidHeader = TRUE,status = "warning",width = 12,
-
                                        selectInput(inputId = "modelselect",label = "Model selection",selectize = T,
                                                    choices = list("NULL",
                                                                   "Rasch model (1PL)",
@@ -315,18 +392,26 @@ app_ui <- function() {
                                        tags$b("Note: "),"In the case of unidimensional models, it is advisable to employ the
                                        standard EM algorithm.",
                                        br(),br(),
-
+                                       selectInput("IRT_TOL",label = "Convergence criterion",
+                                                   selectize = TRUE,
+                                                   choices = list("0.01","0.001","0.0001","0.00001","0.0000001"),
+                                                   selected = "0.00001"),
+                                       br(),
+                                       selectInput("IRT_ncycles",label = "Maximum number of iterations",
+                                                   selectize = TRUE,
+                                                   choices = list("500","1000","2000","3000","5000"),
+                                                   selected = "500"),
                                        submitButton( "Update results")))
                             )),
                           tabItem(
                             tabName = "IRTassum_test",
                             fluidPage(column(8,
-                                             box(title="Independence test",status = "info",width = 12,solidHeader = TRUE,
+                                             box(title="Independence Test",status = "info",width = 12,solidHeader = TRUE,
                                                  DT::dataTableOutput("IRT_Q3")%>%
                                                    box_show_theme()
                                              )),
                                       column(4,
-                                             box(title = "Index selection",width = 12,solidHeader = TRUE,
+                                             box(title = "Index Selection",width = 12,solidHeader = TRUE,
                                                  status = "warning",
                                                  selectInput(inputId = "IRT_select_independent",label = NULL,
                                                              choices = list("LD-X2 (Chen & Thissen, 1997)",
@@ -337,12 +422,12 @@ app_ui <- function() {
                           tabItem(
                             tabName = "IRTitemfit",
                             fluidPage(column(8,
-                                             box(title="Item fit",dataTableOutput("IRT_itemfit")%>%
+                                             box(title="Item Fit",DT::dataTableOutput("IRT_itemfit")%>%
                                                    box_show_theme(),
                                                  solidHeader = TRUE,
                                                  status = "info",width = 12)),
                                       column(4,
-                                             box(title = "Indices selection",width = 12,solidHeader = TRUE,
+                                             box(title = "Indices Selection",width = 12,solidHeader = TRUE,
                                                  status = "warning",
                                                  selectInput("IRT_itemfit_method", label = NULL,
                                                              choices = list("chi-squared test (Kang & Chen, 2007)",
@@ -355,26 +440,32 @@ app_ui <- function() {
                           tabItem(
                             tabName = "IRTitempar",
                             fluidPage(column(8,
-                                             box(title="Item parameters",
+                                             box(title="Item Parameters",
                                                  tags$b("Note: "),"For detailed formulas for the model and interpretations of parameters,
                                                  please download the analysis report from the Analysis Report section.",
                                                  br(),
                                                  DT::dataTableOutput("IRT_itempar")%>%
                                                    box_show_theme(),
                                                  solidHeader = TRUE,
-                                                 status = "info",width = 12)))
+                                                 status = "info",width = 12)),
+                                      column(4,h3("IRT Model Formula and Parameters"),
+                                             withMathJax(),
+                                             uiOutput("IRT_info"),
+                                             br(),
+                                             tags$b("See the IRT analysis report for more details.")
+                                             ))
                           ),
                           tabItem(
                             tabName = "IRTperson",
                             fluidPage(column(8,
-                                             box(title = "Person parameter", solidHeader = TRUE, status = "info",
+                                             box(title = "Person Parameter", solidHeader = TRUE, status = "info",
                                                  tags$b("Note: "), "The ID in the data corresponds to the row number of the subject's raw score data.",
                                                  br(),br(),
-                                                 dataTableOutput("IRT_person")%>%
+                                                 DT::dataTableOutput("IRT_person")%>%
                                                    box_show_theme(),
                                                  width = 12)),
                                       column(4,
-                                             box(title = "Estimation method",width = 12,solidHeader = TRUE,
+                                             box(title = "Estimation Method",width = 12,solidHeader = TRUE,
                                                  status = "warning",
                                                  selectInput(inputId = "IRT_person_est_method",
                                                              label = NULL,
@@ -397,6 +488,9 @@ app_ui <- function() {
                                       column(4,
                                              box(title = "Customize Drawing",width = 12,solidHeader = TRUE,
                                                  status = "warning",
+                                                 sliderInput(inputId = "IRT_wright_binwidth",label = "The width of the bin.",
+                                                             min = 0.1,max = 1,step = 0.01,value = 0.5),
+                                                 br(),
                                                  sliderInput(inputId = "IRT_wright_map_height",label = "The height of WrightMap.",
                                                              min = 300,max = 1800,step = 30,value = 400),
                                                  br(),
@@ -411,19 +505,21 @@ app_ui <- function() {
                                                  sliderInput(inputId = "IRT_wright_p_width",label = "The width of right plot.",
                                                              min = 1, max = 5, value = 1.618, step = 0.25),
                                                  submitButton( "Update plot")),
-                                             box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
+                                             box(title = "Download Figure",solidHeader = TRUE,status = "success",width = 12,
                                                  downloadButton(outputId = "IRT_wrightfile", label = "Download"))))
                           ),
                           tabItem(
                             tabName = "IRTicc",
                             fluidPage(column(8,
-                                             box(title = "Item characteristic curve (ICC)", solidHeader = TRUE, status = "info",
+                                             box(title = "Item Characteristic Curve (ICC)", solidHeader = TRUE, status = "info",
                                                  uiOutput(outputId = "IRT_ICC1")%>%
                                                    box_show_theme(),
                                                  width = 12)),
                                       column(4,
                                              box(title = "Customize Drawing (ICC)",width = 12,solidHeader = TRUE,
                                                  status = "warning",
+                                                 uiOutput("IRT_ICC_item_selection"),
+                                                 br(),
                                                  sliderInput(inputId = "wrap_height", label = "Select height",
                                                              min = 300, max = 1800,value = 400,step = 30),
                                                  br(),
@@ -444,18 +540,20 @@ app_ui <- function() {
                                                              choices = list("2","3","4","5","6","7"),
                                                              selected = "4"),
                                                  submitButton( "Update results")),
-                                             box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
+                                             box(title = "Download Figure",solidHeader = TRUE,status = "success",width = 12,
                                                  downloadButton(outputId = "IRT_ICCfile", label = "Download"))))
                           ),
                           tabItem(
                             tabName = "IRTiic",
                             fluidPage(column(8,
-                                             box(title = "Item information curve (IIC)", solidHeader = TRUE, status = "info",
+                                             box(title = "Item Information Curve (IIC)", solidHeader = TRUE, status = "info",
                                                  uiOutput("IRT_IIC1")%>%
                                                    box_show_theme(),
                                                  width = 12)),
                                       column(4,
                                              box(title = "Customize Drawing (IIC)", solidHeader = TRUE,status = "warning",width = 12,
+                                                 uiOutput("IRT_IIC_item_selection"),
+                                                 br(),
                                                  selectInput(inputId = "IRTiic_scale",label = "Free or fixed y axis",
                                                              choices = list("Free","Fixed"),selected = "Free"),
                                                  br(),
@@ -481,31 +579,31 @@ app_ui <- function() {
                                                              selected = "4"),
 
                                                  submitButton( "Update results")),
-                                             box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
+                                             box(title = "Download Figure",solidHeader = TRUE,status = "success",width = 12,
                                                  downloadButton(outputId = "IRT_IICfile", label = "Download"))))
                           ),
                           tabItem(tabName = "IRTtic",
                                   fluidRow(
                                     column(8,
-                                           box(title = "Test information curve (TIC)", solidHeader = TRUE, status = "info",
+                                           box(title = "Test Information Curve (TIC)", solidHeader = TRUE, status = "info",
                                                plotOutput("IRT_TIC")%>%
                                                  box_show_theme(),
                                                width = 12)),
                                     column(4,
-                                           box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
+                                           box(title = "Download Figure",solidHeader = TRUE,status = "success",width = 12,
                                                downloadButton(outputId = "IRT_TICfile", label = "Download"))))
                           ),
                           tabItem(tabName = "IRTreport_tab",
                                   fluidRow(
 
                                     column(8,
-                                           box(title = "Download results",solidHeader = TRUE,status = "success",width = 12,
+                                           box(title = "Download Results",solidHeader = TRUE,status = "success",width = 12,
                                                "Download all the analysis results of unidimensional IRT in the 'TestAnaAPP'.",br(),
                                                br(),
                                                downloadButton(outputId = "IRT_resultfile", label = "Download results"),
                                                br(),
                                                br()),
-                                           box(title = "Generate data analysis reports",solidHeader = TRUE,status = "success",width = 12,
+                                           box(title = "Generate Data Analysis Reports",solidHeader = TRUE,status = "success",width = 12,
                                                "TestAnaAPP will generate a data analysis report based on the following settings:",
                                                br(),
                                                br(),
@@ -526,12 +624,25 @@ app_ui <- function() {
                                                br(),
                                                submitButton("Update Settings"),
                                                br(),
-                                               downloadButton(outputId = "IRT_report",label = "Download analysis report"))))
+                                               tags$b("Please first set the drawing parameters in the Item Characteristic Curve and Item Information Curve modules.",
+                                                      style = "color:red"),
+                                               br(),
+                                               downloadButton(outputId = "IRT_report",label = "Download analysis report")
+                                               )))
                           ),
-                          #G. MIRT page---------------------------------------------------------------------------------
+                          #F. MIRT page---------------------------------------------------------------------------------
                           tabItem(
                             tabName = "MIRTdim_info",
                             fluidPage(column(8,
+                                             box(title="Score Data", solidHeader = TRUE, status = "warning",width = 12,
+                                                 br(),
+                                                 tags$b("Note: "), "If necessary, please convert the scoring direction of the
+                                                reverse-scored items before data analysis, and then upload them to this platform.",
+                                                 tags$b("Please do not upload total score data for quizzes or dimensions."),
+                                                 br(),br(),br(),
+                                                 DT::dataTableOutput("MIRT_Response")%>%
+                                                   box_show_theme(),
+                                                 htmlOutput("MIRT_data_type")),
                                              box(title = "Test dimension", solidHeader = TRUE,width = 12,
                                                  status = "warning",
                                                  tags$b("Note: "),"The Q-matrix is a numerical matrix utilized to delineate which items
@@ -539,35 +650,42 @@ app_ui <- function() {
                                                  items, and the number of columns corresponds to the number of traits. A value of 1 in
                                                  the matrix indicates that the item is used to assess the corresponding trait, while a
                                                  value of 0 signifies that the item does not assess the trait.",
+                                                 downloadButton("dimension_download",label = "Download template"),
                                                  br(),br(),
+                                                 fileInput(inputId = "dimensionfile",
+                                                           "Kindly upload an Excel file with example data to demonstrate
+                                                           the relationship between each question and dimension.",
+                                                           placeholder="File",buttonLabel = "Browse",
+                                                           accept = c("xlsx","xls","csv")),
                                                  DT::dataTableOutput(outputId = "dimension_example")%>%
                                                    box_show_theme()),
-                                             box(title = "Dimension and item",solidHeader = TRUE,width = 12,
+                                             box(title = "Dimension and Item",solidHeader = TRUE,width = 12,
                                                  status = "warning",
                                                  textOutput("dimension_code")%>%
                                                    box_show_theme())),
                                       column(4,
-                                             box(title = "Upload dimension information",solidHeader = TRUE,status = "warning",width = 12,
-                                                 fileInput(inputId = "dimensionfile",
-                                                           "Kindly upload an Excel file with example data on the left side to demonstrate
-                                                           the correlation between each question and dimension.",
+                                             box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
+                                                 fileInput("MIRT_res", "Kindly submit the test data file that requires analysis.
+                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Ensure that the file solely consists of score data, and refrain from
+                                                              using purely numerical column names.",
                                                            placeholder="File",buttonLabel = "Browse",
-                                                           accept = c("xlsx","xls","csv")))))
+                                                           accept = c("xlsx","xls","csv","sav","txt")
+                                                 ),width = 12)))
                           ),
-
                           tabItem(
                             tabName = "MIRTmodelfit",
                             fluidPage(column(8,
                                              box(title = "Relative model fit indices",solidHeader = TRUE,
                                                  status = "info",width = 12,
-                                                 dataTableOutput("MIRT_modelfit_relat")%>%
+                                                 DT::dataTableOutput("MIRT_modelfit_relat")%>%
                                                    box_show_theme()),
                                              box(title="Absolute fit indices",DT::dataTableOutput("MIRT_modelfit")%>%
                                                    box_show_theme(),
                                                  solidHeader = TRUE,
                                                  status = "info",width = 12)),
                                       column(4,
-                                             box(title="MIRT setup",
+                                             box(title="MIRT Setup",
                                                  solidHeader = TRUE,status = "warning",width = 12,
 
                                                  selectInput(inputId = "modelselect1",label = "Model selection",selectize = T,
@@ -592,14 +710,24 @@ app_ui <- function() {
                                                  For multidimensional models,
                                                  it is recommended to use quasi-Monte Carlo EM estimation.",
                                                  br(),br(),
+                                                 selectInput("MIRT_TOL",label = "Convergence criterion",
+                                                             selectize = TRUE,
+                                                             choices = list("0.01","0.001","0.0001","0.00001","0.0000001"),
+                                                             selected = "0.00001"),
+                                                 br(),
+                                                 selectInput("MIRT_ncycles",label = "Maximum number of iterations",
+                                                             selectize = TRUE,
+                                                             choices = list("500","1000","2000","3000","5000"),
+                                                             selected = "500"),
+                                                 br(),
                                                  selectInput(inputId = "include_cov",label = "Is it necessary to estimate the covariance matrix?",
                                                              selectize = TRUE,
                                                              choices = list("Yes",
                                                                             "No"),
-                                                             selected = "No"),
+                                                             selected = "Yes"),
                                                  tags$b("Note: "), "Estimating the covariance matrix can be time-consuming and may encounter
                                                  errors in some cases, depending on the parameter estimation method. However,
-                                                 it is necessary to estimate the covariance in multidimensional models.",
+                                                 it is recommended to estimate the covariance in multidimensional models.",
                                                  br(),br(),
 
                                                  submitButton( "Update results"))))
@@ -608,13 +736,13 @@ app_ui <- function() {
                           tabItem(
                             tabName = "MIRTassum_test",
                             fluidPage(column(8,
-                                             box(title="Independence test",solidHeader = TRUE,
+                                             box(title="Independence Test",solidHeader = TRUE,
                                                  status = "info",width = 12,
                                                  DT::dataTableOutput("MIRT_Q3")%>%
                                                    box_show_theme()
                                              )),
                                       column(4,
-                                             box(title = "Indices selection",width = 12,solidHeader = TRUE,
+                                             box(title = "Indices Selection",width = 12,solidHeader = TRUE,
                                                  status = "warning",
                                                  selectInput(inputId = "MIRT_select_independent",label = NULL,
                                                              choices = list("LD-X2 (Chen & Thissen, 1997)",
@@ -625,12 +753,12 @@ app_ui <- function() {
                           tabItem(
                             tabName = "MIRTitemfit",
                             fluidPage(column(8,
-                                             box(title="Item fit",dataTableOutput("MIRT_itemfit")%>%
+                                             box(title="Item Fit",DT::dataTableOutput("MIRT_itemfit")%>%
                                                    box_show_theme(),
                                                  solidHeader = TRUE,
                                                  status = "info",width = 12)),
                                       column(4,
-                                             box(title = "Indices selection",width = 12,solidHeader = TRUE,
+                                             box(title = "Indices Selection",width = 12,solidHeader = TRUE,
                                                  status = "warning",
                                                  selectInput("MIRT_itemfit_method", label = NULL,
                                                              choices = list("chi-squared test (Kang & Chen, 2007)"),
@@ -641,7 +769,7 @@ app_ui <- function() {
                           tabItem(
                             tabName = "MIRTitempar",
                             fluidPage(column(8,
-                                             box(title="Item parameters",
+                                             box(title="Item Parameters",
                                                  tags$b("Note: "),"For detailed formulas for the model and interpretations of parameters,
                                                  please download the analysis report from the Analysis Report section.",
                                                  br(),
@@ -649,22 +777,28 @@ app_ui <- function() {
                                                    box_show_theme(),
                                                  solidHeader = TRUE,
                                                  status = "info",width = 12),
-                                             box(title = "Covariance matrix",
-                                                 dataTableOutput("cov_est")%>%
+                                             box(title = "Covariance Matrix",
+                                                 DT::dataTableOutput("cov_est")%>%
                                                    box_show_theme(),
                                                  solidHeader = TRUE,
-                                                 status = "info",width = 12)))
+                                                 status = "info",width = 12)),
+                                      column(4,h3("MIRT Model Formula and Parameters"),
+                                             withMathJax(),
+                                             uiOutput("MIRT_info"),
+                                             br(),
+                                             tags$b("See the MIRT analysis report for more details.")
+                                      ))
                           ),
                           tabItem(
                             tabName = "MIRTperson",
                             fluidPage(column(8,
-                                             box(title = "Person parameters", solidHeader = TRUE, status = "info",
+                                             box(title = "Person Parameters", solidHeader = TRUE, status = "info",
                                                  tags$b("Note: "), "The ID in the data corresponds to the row number of the subject's raw score data.",
                                                  br(),br(),
-                                                 dataTableOutput("MIRT_person")%>%
+                                                 DT::dataTableOutput("MIRT_person")%>%
                                                    box_show_theme(),width = 12)),
                                       column(4,
-                                             box(title = "Method selection",width = 12,solidHeader = TRUE,
+                                             box(title = "Method Selection",width = 12,solidHeader = TRUE,
                                                  status = "warning",
                                                  selectInput(inputId = "MIRT_person_est_method",
                                                              label = NULL,
@@ -687,6 +821,9 @@ app_ui <- function() {
                                       column(4,
                                              box(title = "Customize Drawing",width = 12,solidHeader = TRUE,
                                                  status = "warning",
+                                                 sliderInput(inputId = "MIRT_wright_binwidth",label = "The width of the bin.",
+                                                             min = 0.1,max = 1,step = 0.01,value = 0.5),
+                                                 br(),
                                                  sliderInput(inputId = "MIRT_wright_map_height",label = "The height of WrightMap.",
                                                              min = 300,max = 1800,step = 30,value = 400),
                                                  br(),
@@ -702,13 +839,13 @@ app_ui <- function() {
                                                              min = 1, max = 5, value = 1.618, step = 0.25),
                                                  uiOutput("MIRT_wright_dim_select"),
                                                  submitButton( "Update plot")),
-                                             box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
+                                             box(title = "Download Figure",solidHeader = TRUE,status = "success",width = 12,
                                                  downloadButton(outputId = "MIRT_wrightfile", label = "Download"))))
                           ),
                           tabItem(
                             tabName = "MIRTicc",
                             fluidPage(column(8,
-                                             box(title = "Item characteristic curve (ICC)", solidHeader = TRUE, status = "info",
+                                             box(title = "Item Characteristic Curve (ICC)", solidHeader = TRUE, status = "info",
                                                  tags$b("Note: "), "The within-item multidimensional test does not currently support drawing.",
                                                  br(),br(),
                                                  uiOutput(outputId = "MIRT_ICC1")%>%
@@ -718,6 +855,8 @@ app_ui <- function() {
 
                                              box(title = "Customize Drawing (ICC)",width = 12,solidHeader = TRUE,
                                                  status = "warning",
+                                                 uiOutput("MIRT_ICC_item_selection"),
+                                                 br(),
                                                  sliderInput(inputId = "MIRT_wrap_height", label = "Select height",
                                                              min = 300,max = 1800,step = 30,value = 400),
                                                  br(),
@@ -738,13 +877,13 @@ app_ui <- function() {
                                                              choices = list("2","3","4","5","6","7"),
                                                              selected = "4"),
                                                  submitButton( "Update results")),
-                                             box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
+                                             box(title = "Download Figure",solidHeader = TRUE,status = "success",width = 12,
                                                  downloadButton(outputId = "MIRT_ICCfile", label = "Download"))))
                           ),
                           tabItem(
                             tabName = "MIRTiic",
                             fluidPage(column(8,
-                                             box(title = "Item information curve (IIC)", solidHeader = TRUE, status = "info",
+                                             box(title = "Item Information Curve (IIC)", solidHeader = TRUE, status = "info",
                                                  tags$b("Note: "), "The within-item multidimensional test does not currently support drawing.",
                                                  br(),br(),
                                                  uiOutput("MIRT_IIC1")%>%
@@ -752,6 +891,8 @@ app_ui <- function() {
                                                  width = 12)),
                                       column(4,
                                              box(title = "Customize Drawing (IIC)", solidHeader = TRUE,status = "warning",width = 12,
+                                                 uiOutput("MIRT_IIC_item_selection"),
+                                                 br(),
                                                  selectInput(inputId = "MIRTiic_scale",label = "Free or fixed y axis",
                                                              choices = list("Free","Fixed"),selected = "Free"),
                                                  br(),
@@ -776,19 +917,19 @@ app_ui <- function() {
                                                              selected = "4"),
 
                                                  submitButton( "Update results")),
-                                             box(title = "Download figure",solidHeader = TRUE,status = "success",width = 12,
+                                             box(title = "Download Figure",solidHeader = TRUE,status = "success",width = 12,
                                                  downloadButton(outputId = "MIRT_IICfile", label = "Download"))))
                           ),
                           tabItem(
                             tabName = "MIRTtic",
                             fluidPage(column(8,
-                                             box(title = "Test information curve (TIC)", solidHeader = TRUE, status = "info",width = 12,
+                                             box(title = "Test Information Curve (TIC)", solidHeader = TRUE, status = "info",width = 12,
                                                  tags$b("Note: "), "The within-item multidimensional test does not currently support drawing.",
                                                  br(),br(),
                                                  plotOutput("MIRT_TIC")%>%
                                                    box_show_theme())),
                                       column(4,
-                                             box(title = "Selection of dimension",width = 12,solidHeader = TRUE,
+                                             box(title = "Selection of Dimension",width = 12,solidHeader = TRUE,
                                                  status = "warning",
                                                  uiOutput("MIRT_TIC_dim_select"),
                                                  submitButton( "Update plot"))
@@ -797,13 +938,13 @@ app_ui <- function() {
                           tabItem(
                             tabName = "MIRTreport_tab",
                             fluidPage(column(8,
-                                             box(title = "Download results",solidHeader = TRUE,status = "success",width = 12,
+                                             box(title = "Download Results",solidHeader = TRUE,status = "success",width = 12,
                                                  "Download all the analysis results of multidimensional IRT in the 'TestAnaAPP'.",br(),
                                                  br(),
                                                  downloadButton(outputId = "MIRT_resultfile", label = "Download results"),
                                                  br(),
                                                  br()),
-                                             box(title = "Generate data analysis reports",solidHeader = TRUE,status = "success",width = 12,
+                                             box(title = "Generate Data Analysis Reports",solidHeader = TRUE,status = "success",width = 12,
                                                  "TestAnaAPP will generate a data analysis report based on the following settings:",
                                                  br(),
                                                  br(),
@@ -824,11 +965,14 @@ app_ui <- function() {
                                                  br(),
                                                  submitButton("Update Settings"),
                                                  br(),
+                                                 tags$b("Please first set the drawing parameters in the Item Characteristic Curve and Item Information Curve modules.",
+                                                        style = "color:red"),
+                                                 br(),
                                                  downloadButton(outputId = "MIRT_report",label = "Download analysis report"))))
 
 
                           ),
-                          #H Continuous response model--------------------------------------------------------------
+                          #G. Continuous response model--------------------------------------------------------------
                           tabItem(
                             tabName = "CRM_maxmin_print",
 
@@ -842,6 +986,8 @@ app_ui <- function() {
                                                  re-parameterized version of the Continuous Response Model (CRM), and
                                                  the method of estimation involves marginal maximum likelihood and the
                                                  Expectation-Maximization (EM) algorithm.",
+                                                 br(),
+                                                 uiOutput("CRM_info"),
 
                                                  br(), br(),
                                                  tags$b("Reference"),br(),
@@ -851,47 +997,56 @@ app_ui <- function() {
                                                  "Wang, T. & Zeng, L.(1998). Item Parameter Estimation for a Continuous
                                                  Response Model Using an EM Algorithm. Applied Psychological Measurement,
                                                  22(4), 333-343.",
+                                                 br(),
+                                                 "Zopluoglu C (2022). _EstCRM: Calibrating Parameters for the Samejima's
+                                                 Continuous IRT Model_. R package version 1.6, <https://CRAN.R-project.org/package=EstCRM>",
                                                  br()
                                              ),
-                                             box(title = "The example of maximum and minimum scores",solidHeader = TRUE,
+                                             box(title="Score Data", solidHeader = TRUE, status = "warning",width = 12,
+                                                 br(),
+                                                 tags$b("Note: "), "If necessary, please convert the scoring direction of the
+                                                reverse-scored items before data analysis, and then upload them to this platform.",
+                                                 tags$b("Please do not upload total score data for quizzes or dimensions."),
+                                                 br(),br(),br(),
+                                                 DT::dataTableOutput("CRM_Response")%>%
+                                                   box_show_theme(),
+                                                 htmlOutput("CRM_data_type")),
+                                             box(title = "Theoretical maximum and minimum (editable)",solidHeader = TRUE,
                                                  status = "warning",width = 12,
-                                                 "The below example is a five-item visual analog scale question, where participants were
-                                                 asked to mark a line segment 112 millimeters long to indicate their level of
-                                                 agreement with the statement. Each millimeter away from the starting point
-                                                 represents one point higher in score. Therefore, the possible maximum score
-                                                 for this question is 112, and the possible minimum score is 0 (without considering
-                                                 actual data).",
+                                                 tags$b("Note: "),"The maximum and minimum scores are theoretical values that are used to
+                                                 transform the raw data. The maximum and minimum scores are used to calculate
+                                                 the probability of the response to each item.",br(),
+                                                 tags$b("Please confirm the correctness of the maximum and minimum scores before proceeding to the next step.",
+                                                        style = "color: red;"),
                                                  br(),br(),
-                                                 tags$b("Note: "),"This data represents the theoretical maximum and minimum scores
-                                                 and is not related to actual data.",
-                                                 dataTableOutput(outputId = "max_min_sim") %>%
-                                                   box_show_theme()),
-                                             box(title = "The uploaded data",solidHeader = TRUE, status = "warning",width = 12,
-                                                 DT::dataTableOutput(outputId = "max_min_real")%>%
-                                                   box_show_theme())
+                                                 DT::DTOutput("my_datatable"),
+                                                 br(),"                                   ",
+                                                 actionButton("save",label = "Confirm",width = "40%",
+                                                              style = "background-color: red; color: white;"), br(),
+                                                 htmlOutput("confirm_info"))
                             ),
                             column(4,
-                                   box(title = "Upload file", solidHeader = TRUE, status = "warning",width = 12,
-                                       "During the calculation process, it is necessary to transform the raw data
-                                                 using the maximum and minimum scores that may exist on the measurement tool.",
-                                       br(),br(),
-                                       fileInput(inputId = "max_min_file",
-                                                 "Please upload this data according to the example on the right.",
+                                   box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
+                                       fileInput("CRM_res", "Kindly submit the test data file that requires analysis.
+                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Ensure that the file solely consists of score data, and refrain from
+                                                              using purely numerical column names.",
                                                  placeholder="File",buttonLabel = "Browse",
-                                                 accept = c("xlsx","xls","csv"))))
+                                                 accept = c("xlsx","xls","csv","sav","txt")
+                                       ),width = 12)
+                                   )
                             )
                           ),
                           tabItem(
 
                             tabName = "CRM_itemfit",
                             fluidPage(column(8,
-
-                                             box(title = "Item fit", solidHeader = TRUE, status = "info",width = 12,
+                                             box(title = "Item Fit", solidHeader = TRUE, status = "info",width = 12,
 
                                                  DT::dataTableOutput(outputId = "CRM_item_fit")%>%
                                                    box_show_theme())),
                                       column(4,
-                                             box(title = "Setup for item fit",
+                                             box(title = "Setup for Item Fit",
                                                  solidHeader = TRUE,status = "warning",width = 12,
 
                                                  sliderInput(inputId = "CRM_fit_group",
@@ -904,14 +1059,16 @@ app_ui <- function() {
                                                  "Ferrando, P.J.(2002). Theoretical and Empirical Comparison between Two Models for
                                                  Continuous Item Responses. Multivariate Behavioral Research, 37(4), 521-542.",
                                                  br(),br(),
+                                                 tags$b("Note: If you have updated the Max/min value, click the button below.",
+                                                        style = "color: red;"),
                                                  submitButton( "Update results")),
-                                             box(title = "Download results",solidHeader = TRUE,status = "success",width = 12,
+                                             box(title = "Download Results",solidHeader = TRUE,status = "success",width = 12,
                                                  "Download all the analysis results for continuous response model in the 'TestAnaAPP'.",br(),
                                                  downloadButton(outputId = "CRM_results",label = "Download"))))
                             ),
                           tabItem(tabName = "CRM_itempara",
                                   fluidPage(column(8,
-                                                   box(title = "Item parameters",solidHeader = TRUE, status = "info",width = 12,
+                                                   box(title = "Item Parameters",solidHeader = TRUE, status = "info",width = 12,
                                                        DT::dataTableOutput(outputId = "CRM_itempar")%>%
                                                          box_show_theme())))
 
@@ -919,7 +1076,7 @@ app_ui <- function() {
 
                           tabItem(tabName = "CRM_personpar",
                                   fluidPage(column(8,
-                                                   box(title = "Person parameter",solidHeader = TRUE, status = "info",width = 12,
+                                                   box(title = "Person Parameter",solidHeader = TRUE, status = "info",width = 12,
                                                        tags$b("Note: "), br(),
                                                        "1. The maximum likelihood estimate (MLE) was used to estimate person parameter.",br(),
                                                        "2. The ID in the data corresponds to the row number of the subject's raw score data.",
@@ -935,31 +1092,43 @@ app_ui <- function() {
                                                          box_show_theme()
                                                        )),
                                             column(4,
-                                                   box(title = "Item selection",width = 12,solidHeader = TRUE,
+                                                   box(title = "Item Selection",width = 12,solidHeader = TRUE,
                                                        status = "warning",
                                                        uiOutput(outputId = "CRM_item_selection"),
 
                                                        submitButton( "Update plot"))))),
-                          # I. DIF-----------------------------------------------------------------------------------------
+                          # H. DIF-----------------------------------------------------------------------------------------
                           tabItem(tabName = "DIF_group",
                                   fluidPage(column(8,
-                                            box(title = "Group variables of the subjects",solidHeader = TRUE, status = "warning",width = 12,
-                                                "The following data is the group variables of the subjects you uploaded to be analyzed for DIF analysis.",
-                                                br(),br(),
-                                                DT::dataTableOutput(outputId = "DIF_group_variable")%>%
-                                                  box_show_theme())),
+                                                   box(title="Score Data", solidHeader = TRUE, status = "warning",width = 12,
+                                                       br(),
+                                                       tags$b("Note: "), "If necessary, please convert the scoring direction of the
+                                                       reverse-scored items before data analysis, and then upload them to this platform.",
+                                                       tags$b("Please do not upload total score data for quizzes or dimensions."),
+                                                       br(),br(),br(),
+                                                       DT::dataTableOutput("DIF_Response")%>%
+                                                         box_show_theme())),
+
                                             column(4,
-                                                   box(title = "Upload group variables",solidHeader = TRUE, status = "warning",width = 12,
-                                                       "Please upload the group variables of the subjects you want to analyze for DIF.",
-                                                       br(),br(),
-                                                       fileInput(inputId = "DIF_group_file",
-                                                                 "Please upload this data according to the example on the right.",
+                                                   box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
+                                                       fileInput("DIF_res", "Kindly submit the test data file that requires analysis.
+                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Ensure that the file solely consists of score data, and refrain from
+                                                              using purely numerical column names.",
                                                                  placeholder="File",buttonLabel = "Browse",
-                                                                 accept = c("xlsx","xls","csv","txt")))))
+                                                                 accept = c("xlsx","xls","csv","sav","txt")
+                                                       ),width = 12),
+                                                   box(title = "Variable Selection", solidHeader = TRUE, status = "warning",width = 12,
+                                                       uiOutput(outputId = "DIF_group_var_select"),
+                                                       submitButton( "Confirm"),
+                                                       br(),br(),
+
+                                                       textOutput(outputId = "group_variables"))))
                                   ),
                           tabItem(tabName = "DIF_analysis",
                                   fluidPage(column(8,
-                                                   box(title = "Analysis results of DIF",solidHeader = TRUE, status = "info",width = 12,
+                                                   box(title = "Analysis Results of DIF",solidHeader = TRUE, status = "info",width = 12,
+                                                       uiOutput("DIF_info"),br(),
                                                        DT::dataTableOutput( "DIF_results")%>%
                                                          box_show_theme())),
                                             column(4,
@@ -972,11 +1141,7 @@ app_ui <- function() {
                                                                    choices = c("Mantel Haenszel","Logistic Regression","SIBTEST"),
                                                                    selected = "Mantel Haenszel"),
                                                        br(),br(),
-                                                       selectInput(inputId = "sig_level",
-                                                                   label = "Significance level",
-                                                                   choices = c("0.01","0.05","0.1"),
-                                                                   selected = "0.05"),
-                                                       br(),br(),
+
                                                        "In addition, you can choose a variable (uploaded in the previous step) to analyze DIF.",
                                                        br(),br(),
                                                        uiOutput(outputId = "DIF_variable_selection"),
@@ -984,28 +1149,17 @@ app_ui <- function() {
                                                        submitButton( "Confirm"),
                                                        br(),
                                                        uiOutput(outputId = "focal_name"),
+                                                       uiOutput(outputId = "LR_model"),
                                                        br(),br(),
                                                        submitButton( "Update results")),
-                                                   box(title = "Download results",solidHeader = TRUE,status = "success",width = 12,
+                                                   box(title = "Download Results",solidHeader = TRUE,status = "success",width = 12,
                                                        "Download all the analysis results for DIF in the 'TestAnaAPP'.",br(),
                                                        downloadButton(outputId = "DIF_download",label = "Download")))))
-
-
-
-
 
                         )))
 
 }
-
-
 box_show_theme <- function(value){
   return(shinycssloaders::withSpinner(ui_element = value,color="#0dc5c1",type=6,size = 1.5 ))
 }
-DT_dataTable_Show <- function(x){
-  DT::datatable(x,
-                filter =list(position = 'top', clear = TRUE, plain = TRUE),
-                options = list(scrollX = TRUE))
-}
-
 
