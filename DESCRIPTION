@@ -1,6 +1,6 @@
 Package: TestAnaAPP
 Title: A 'shiny' App for Test Analysis and Visualization
-Version: 1.1.1
+Version: 1.1.2
 Authors@R: 
     c(person(given = "Youxiang", family = "Jiang", 
     email = "jiangyouxiang34@163.com", 
@@ -13,6 +13,7 @@ Authors@R:
     email ="whb@bnu.edu.cn", 
     role = c("aut","ths"),
     comment = "0000-0001-8620-9734"))
+Maintainer: Youxiang Jiang <jiangyouxiang34@163.com>
 Description: This application provides exploratory and confirmatory factor analysis, classical test theory, unidimensional and multidimensional item response theory, and continuous item response model analysis, through the 'shiny' interactive interface. In addition,  it offers rich functionalities for visualizing and downloading results. Users can download figures, tables, and analysis reports via the interactive interface. 
 Depends: ggplot2 (>= 3.4.3), mirt (>= 1.42), shinydashboard (>= 0.7.2),
         EstCRM (>= 1.6), shiny (>= 1.7.5)
@@ -29,10 +30,9 @@ Suggests: testthat (>= 3.2.1.1)
 URL: https://github.com/jiangyouxiang/TestAnaAPP
 BugReports: https://github.com/jiangyouxiang/TestAnaAPP/issues
 NeedsCompilation: no
-Packaged: 2024-09-10 00:27:19 UTC; 17807
+Packaged: 2024-11-09 03:44:38 UTC; 17807
 Author: Youxiang Jiang [cre, aut, ths] (0000-0003-4557-5038),
   Qing Zeng [aut, ths],
   Hongbo Wen [aut, ths] (0000-0001-8620-9734)
-Maintainer: Youxiang Jiang <jiangyouxiang34@163.com>
 Repository: CRAN
-Date/Publication: 2024-09-10 07:30:02 UTC
+Date/Publication: 2024-11-09 04:00:02 UTC

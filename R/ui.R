@@ -97,12 +97,15 @@ app_ui <- function() {
                             column(4,
                                    box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
                                        fileInput("EFA_res", "Kindly submit the test data file that requires analysis.
-                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Acceptable file formats for uploading include TXT, CSV, XLSX, and SPSS.
                                                               Ensure that the file solely consists of score data, and refrain from
                                                               using purely numerical column names.",
                                                  placeholder="File",buttonLabel = "Browse",
                                                  accept = c("xlsx","xls","csv","sav","txt")
-                                       ),width = 12),
+                                       ),width = 12,
+                                       uiOutput(outputId = "EFA_var_select"),
+                                       tags$b("Please click the button below before conduct EFA analysis.",style = "color: red;"),
+                                       submitButton( "Confirm")),
                                    box(title = "Method",status = "warning", solidHeader = TRUE,width = 12,
                                        selectInput(inputId = "EFA_method",label = "Extraction method",selectize = TRUE,
                                                    choices = list("Principal Component Analysis",
@@ -121,8 +124,12 @@ app_ui <- function() {
                                                                   "Direct Oblimin",
                                                                   "Promax",
                                                                   "Quartimax",
-                                                                  "Equamax"),
+                                                                  "Equamax",
+                                                                  "None (not suggested)"),
                                                    selected = "Varimax"),
+                                       # textInput(inputId = "Number_factor",label = "Fixing the number of factors.",
+                                       #           placeholder = "Blank or the number of factors for EFA"),
+
                                        submitButton( "Update results")),
                                    box(title = "Download Results", status = "success",solidHeader = TRUE,
                                        downloadButton(outputId = "EFA_result", label = "Download"),
@@ -172,12 +179,15 @@ app_ui <- function() {
                                      column(4,
                                             box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
                                                 fileInput("CFA_res", "Kindly submit the test data file that requires analysis.
-                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Acceptable file formats for uploading include TXT, CSV, XLSX, and SPSS.
                                                               Ensure that the file solely consists of score data, and refrain from
                                                               using purely numerical column names.",
                                                           placeholder="File",buttonLabel = "Browse",
                                                           accept = c("xlsx","xls","csv","sav","txt")
-                                                ),width = 12),
+                                                ),width = 12,
+                                                uiOutput(outputId = "CFA_var_select"),
+                                                tags$b("Please click the button below before conduct CFA.",style = "color: red;"),
+                                                submitButton( "Confirm")),
                                             box(title="Basic Settings",
                                                 solidHeader = TRUE,status = "warning",width = 12,
                                                 selectInput(inputId = "CFA_estimator",label = "Estimator selection",
@@ -254,14 +264,16 @@ app_ui <- function() {
                                      column(4,
                                             box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
                                                 fileInput("CTT_res", "Kindly submit the test data file that requires analysis.
-                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Acceptable file formats for uploading include TXT, CSV, XLSX, and SPSS.
                                                               Ensure that the file solely consists of score data, and refrain from
                                                               using purely numerical column names.",
                                                           placeholder="File",buttonLabel = "Browse",
                                                           accept = c("xlsx","xls","csv","sav","txt")
-                                                ),br(),
-                                                htmlOutput("item_type"),
-                                                ,width = 12),
+                                                ),br(),width = 12,
+                                                uiOutput(outputId = "CTT_var_select"),
+                                                tags$b("Please click the button below before conduct CTT analysis.",style = "color: red;"),
+                                                submitButton( "Confirm"),br(),
+                                                htmlOutput("item_type")),
                                             box(title = "Download Results",status = "success",solidHeader = TRUE,  width = 12,
                                                 downloadButton(outputId = "summary_result", label = "Download")))
                             )),
@@ -360,12 +372,15 @@ app_ui <- function() {
                             column(4,
                                    box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
                                        fileInput("IRT_res", "Kindly submit the test data file that requires analysis.
-                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Acceptable file formats for uploading include TXT, CSV, XLSX, and SPSS.
                                                               Ensure that the file solely consists of score data, and refrain from
                                                               using purely numerical column names.",
                                                  placeholder="File",buttonLabel = "Browse",
                                                  accept = c("xlsx","xls","csv","sav","txt")
-                                       ),width = 12),
+                                       ),width = 12,
+                                       uiOutput(outputId = "UIRT_var_select"),
+                                       tags$b("Please click the button below before conduct IRT analysis.",style = "color: red;"),
+                                       submitButton( "Confirm")),
                                    box(title="Basic Settings",
                                        solidHeader = TRUE,status = "warning",width = 12,
                                        selectInput(inputId = "modelselect",label = "Model selection",selectize = T,
@@ -653,7 +668,7 @@ app_ui <- function() {
                                                  downloadButton("dimension_download",label = "Download template"),
                                                  br(),br(),
                                                  fileInput(inputId = "dimensionfile",
-                                                           "Kindly upload an Excel file with example data to demonstrate
+                                                           "Kindly upload an XLSX file with example data to demonstrate
                                                            the relationship between each question and dimension.",
                                                            placeholder="File",buttonLabel = "Browse",
                                                            accept = c("xlsx","xls","csv")),
@@ -666,12 +681,15 @@ app_ui <- function() {
                                       column(4,
                                              box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
                                                  fileInput("MIRT_res", "Kindly submit the test data file that requires analysis.
-                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Acceptable file formats for uploading include TXT, CSV, XLSX, and SPSS.
                                                               Ensure that the file solely consists of score data, and refrain from
                                                               using purely numerical column names.",
                                                            placeholder="File",buttonLabel = "Browse",
                                                            accept = c("xlsx","xls","csv","sav","txt")
-                                                 ),width = 12)))
+                                                 ),width = 12,
+                                                 uiOutput(outputId = "MIRT_var_select"),
+                                                 tags$b("Please click the button below before conduct MIRT analysis.",style = "color: red;"),
+                                                 submitButton( "Confirm"))))
                           ),
                           tabItem(
                             tabName = "MIRTmodelfit",
@@ -1028,12 +1046,15 @@ app_ui <- function() {
                             column(4,
                                    box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
                                        fileInput("CRM_res", "Kindly submit the test data file that requires analysis.
-                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Acceptable file formats for uploading include TXT, CSV, XLSX, and SPSS.
                                                               Ensure that the file solely consists of score data, and refrain from
                                                               using purely numerical column names.",
                                                  placeholder="File",buttonLabel = "Browse",
                                                  accept = c("xlsx","xls","csv","sav","txt")
-                                       ),width = 12)
+                                       ),width = 12,
+                                       uiOutput(outputId = "CRM_var_select"),
+                                       tags$b("Please click the button below before conduct CRM analysis.",style = "color: red;"),
+                                       submitButton( "Confirm"))
                                    )
                             )
                           ),
@@ -1112,7 +1133,7 @@ app_ui <- function() {
                                             column(4,
                                                    box(title = "Upload Score Data", status = "warning", solidHeader = TRUE,
                                                        fileInput("DIF_res", "Kindly submit the test data file that requires analysis.
-                                                              Acceptable file formats for uploading include TXT, CSV, Excel, and SPSS.
+                                                              Acceptable file formats for uploading include TXT, CSV, XLSX, and SPSS.
                                                               Ensure that the file solely consists of score data, and refrain from
                                                               using purely numerical column names.",
                                                                  placeholder="File",buttonLabel = "Browse",
@@ -1120,6 +1141,7 @@ app_ui <- function() {
                                                        ),width = 12),
                                                    box(title = "Variable Selection", solidHeader = TRUE, status = "warning",width = 12,
                                                        uiOutput(outputId = "DIF_group_var_select"),
+                                                       tags$b("Please click the button below before conduct DIF analysis.",style = "color: red;"),
                                                        submitButton( "Confirm"),
                                                        br(),br(),
 
